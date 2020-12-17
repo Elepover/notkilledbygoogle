@@ -4,8 +4,28 @@
     <projectFile>NotKilledByGoogle/NotKilledByGoogle.csproj</projectFile>
     <projectFile>NotKilledByGoogle.Bot/NotKilledByGoogle.Bot.csproj</projectFile>
   </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="279ee636-fd00-4eab-ba67-2751bac2eae7" name="Default Changelist" comment="" />
+    <list default="true" id="279ee636-fd00-4eab-ba67-2751bac2eae7" name="Default Changelist" comment="init">
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/BotConfig.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/JsonConfigManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/ConsoleHelper.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DateTimeOffsetConverter.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DeceasedType.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DeceasedTypeConverter.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/FetchErrorEventArgs.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/GraveKeeper.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/Gravestone.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/Utils.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Tests/DeserializationTest.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/NotKilledByGoogle.Tests/NotKilledByGoogle.Tests.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.NotKilledByGoogle/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.NotKilledByGoogle/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.NotKilledByGoogle/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.NotKilledByGoogle/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NotKilledByGoogle.Bot/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NotKilledByGoogle.Bot/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NotKilledByGoogle.sln" beforeDir="false" afterPath="$PROJECT_DIR$/NotKilledByGoogle.sln" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -17,10 +37,36 @@
   <component name="IdeDocumentHistory">
     <changedPaths>
       <option value="$PROJECT_DIR$/NotKilledByGoogle/Program.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Program.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/IConfigFormat.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/Config.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/IConfigManager.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/ConfigManager.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Utils.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/JsonConfigManager.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Data/Gravestone.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Grave/Gravestone.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DeathType.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DeceasedType.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DateTimeConverter.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DateTimeOffsetConverter.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/DeceasedTypeConverter.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/Graveyard.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/Config/BotConfig.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Tests/UnitTest1.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Tests/GravestoneResolvingTest.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Tests/GraveKeeperTest.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Tests/DeserializationTest.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/ConsoleHelper.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/Gravestone.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/FetchErrorEventArgs.cs" />
+      <option value="$PROJECT_DIR$/NotKilledByGoogle.Bot/GraveKeeper/GraveKeeper.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1llYZK0oqgja4u289OWWTkqqWQt" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -29,6 +75,13 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="inlay.hints" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RunManager" selected=".NET Project.NotKilledByGoogle">
@@ -78,15 +131,37 @@
       <option name="presentableId" value="Default" />
       <updated>1608173201738</updated>
       <workItem from="1608173209208" duration="155000" />
+      <workItem from="1608173368694" duration="17504000" />
     </task>
+    <task id="LOCAL-00001" summary="init">
+      <created>1608173692177</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1608173692177</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="UnityProjectConfiguration" hasMinimizedUI="null" />
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="init" />
+    <option name="LAST_COMMIT_MESSAGE" value="init" />
   </component>
 </project>

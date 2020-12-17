@@ -6,7 +6,7 @@ namespace NotKilledByGoogle.Bot
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            
         }
     }
 }
