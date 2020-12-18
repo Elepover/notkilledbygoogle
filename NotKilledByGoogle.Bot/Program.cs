@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,9 @@ namespace NotKilledByGoogle.Bot
 {
     internal class Program
     {
-        private static readonly string Version = "0.1.4a";
+        private const string Version = "0.1.4a";
+        private const int DeathAnnouncerInterval = 300000;
+        private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         private static readonly Stopwatch AppStopwatch = new();
         private static readonly JsonConfigManager<BotConfig> ConfigManager = new()
         {
@@ -25,13 +28,67 @@ namespace NotKilledByGoogle.Bot
         private static TelegramBotClient _bot = null!;
         private static int _cancelCounter = 3;
 
-        private static void OnKeyboardInterrupt(object? sender, ConsoleCancelEventArgs e)
+        private static async void OnKeyboardInterrupt(object? sender, ConsoleCancelEventArgs e)
         {
             e.Cancel = true;
             _cancelCounter--;
             if (_cancelCounter <= 0) Environment.Exit(1);
-            Info($"Stopping... Press {_cancelCounter} more times to force exit.");
+            Info($"Press {_cancelCounter} more times to force exit.");
+            if (_cancelCounter != 2) return;
+            // first cancel
+            Info("Attempting to save configurations...");
+            await ConfigManager.SaveConfigAsync();
+            Info("Cancelling running tasks...");
             TokenSource.Cancel();
+        }
+
+        private static async Task DeathAnnouncer()
+        {
+            // wait until GraveKeeper tells it that data is ready
+            var tcs = new TaskCompletionSource();
+            GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => tcs.SetResult();
+            _keeper.Fetched += oneTimeHandler;
+            await tcs.Task;
+            _keeper.Fetched -= oneTimeHandler;
+            // ok it's ready now, cache it
+            var graveyard = _keeper.Gravestones;
+            Info("Scheduling death announcements...");
+            // TODO: add death announcement scheduling
+            Info("Death announcer is ready.");
+            
+            while (!TokenSource.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(DeathAnnouncerInterval, TokenSource.Token);
+                    // get latest graveyard status
+                    var newGraveyard = _keeper.Gravestones;
+
+                    // check if anything is "added"
+                    // TODO: implement IEqualityChecker -> only care about product name, other details ignored
+                    if (newGraveyard.Except(graveyard).Any())
+                    {
+                        // TODO: add "new project (to be) killed by Google" broadcast
+                        goto announcerCycleDone;
+                    }
+
+                    // check if anything is "removed"
+                    // TODO: implement IEqualityChecker
+                    if (graveyard.Except(newGraveyard).Any())
+                    {
+                        // TODO: add "project revived by Google" broadcast
+                    }
+                    
+announcerCycleDone:
+                    // update the cached graveyard
+                    graveyard = newGraveyard;
+                }
+                catch (TaskCanceledException) {}
+                catch (Exception ex)
+                {
+                    Warning("Death announcer encountered something wrong: " + ex);
+                }
+            }
         }
         
         private static void OnFetchError(object? sender, FetchErrorEventArgs e)
@@ -66,11 +123,14 @@ namespace NotKilledByGoogle.Bot
                 _bot = new(ConfigManager.Config.ApiKey);
                 await _bot.TestApiAsync();
                 
-                Info("Preparing Graveyard keeper...");
-                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation) { UpdateInterval = 5000 };
+                Info("Preparing graveyard keeper...");
+                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation);
                 _keeper.FetchError += OnFetchError;
                 _keeper.Fetched += OnFetched;
                 _keeper.Start();
+                
+                Info("Preparing death announcer...");
+                _ = Task.Run(DeathAnnouncer);
 
                 Info($"Startup complete ({AppStopwatch.Elapsed:g}), main thread entering standby state...");
                 while (!TokenSource.IsCancellationRequested)
@@ -79,7 +139,12 @@ namespace NotKilledByGoogle.Bot
                     {
                         await Task.Delay(5000, TokenSource.Token);
                     }
-                    catch {}
+                    // ignore that TaskCanceledException: we're terminating everything
+                    catch (TaskCanceledException) {}
+                    catch (Exception ex)
+                    {
+                        Error("Something happened in main thread: " + ex);
+                    }
                 }
 
                 Environment.Exit(0);
