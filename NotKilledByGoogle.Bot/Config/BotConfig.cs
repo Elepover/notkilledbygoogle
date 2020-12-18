@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using NotKilledByGoogle.Bot.GraveKeeper;
+using NotKilledByGoogle.Bot.Grave;
 
 namespace NotKilledByGoogle.Bot.Config
 {

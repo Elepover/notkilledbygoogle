@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NotKilledByGoogle.Bot.GraveKeeper
+namespace NotKilledByGoogle.Bot.Grave
 {
     public class DeceasedTypeConverter : JsonConverter<DeceasedType>
     {

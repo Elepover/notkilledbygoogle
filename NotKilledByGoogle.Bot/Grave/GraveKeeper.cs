@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NotKilledByGoogle.Bot.GraveKeeper
+namespace NotKilledByGoogle.Bot.Grave
 {
     public class GraveKeeper
     {
@@ -30,11 +30,11 @@ namespace NotKilledByGoogle.Bot.GraveKeeper
                     // set latest fetch time
                     LatestSuccessfulFetch = DateTimeOffset.Now;
                     // notify all subscribers
-                    Fetched?.Invoke(this, new EventArgs());
+                    Fetched?.Invoke(this, new FetchedEventArgs(_graveyardJsonLocation));
                 }
                 catch (Exception ex)
                 {
-                    FetchError?.Invoke(this, new FetchErrorEventArgs(ex));
+                    FetchError?.Invoke(this, new FetchErrorEventArgs(ex, LatestSuccessfulFetch ?? DateTimeOffset.UnixEpoch, _graveyardJsonLocation));
                 }
 
                 await Task.Delay(UpdateInterval);
@@ -51,7 +51,7 @@ namespace NotKilledByGoogle.Bot.GraveKeeper
         /// </summary>
         public event FetchErrorEventHandler? FetchError;
         public delegate void FetchErrorEventHandler(object? sender, FetchErrorEventArgs e);
-        public delegate void FetchedEventHandler(object? sender, EventArgs e);
+        public delegate void FetchedEventHandler(object? sender, FetchedEventArgs e);
         
         /// <summary>
         /// Specifies how frequently should this <see cref="GraveKeeper"/> check for graveyard updates, in milliseconds.

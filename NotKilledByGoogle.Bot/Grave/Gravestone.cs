@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NotKilledByGoogle.Bot.GraveKeeper
+namespace NotKilledByGoogle.Bot.Grave
 {
     /// <summary>
     /// Represents a gravestone in Killed by Google graveyard.

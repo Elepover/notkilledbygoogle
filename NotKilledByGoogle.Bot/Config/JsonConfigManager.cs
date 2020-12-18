@@ -46,11 +46,12 @@ namespace NotKilledByGoogle.Bot.Config
         /// <summary>
         /// Current configurations stored in this <see cref="JsonConfigManager{T}"/>.
         /// </summary>
-        public T? Config { get; private set; }
+        public T Config { get; private set; } = null!;
+
         /// <summary>
         /// Configuration file's path.
         /// </summary>
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = "";
         
         /// <summary>
         /// Load configurations from file.

@@ -1,4 +1,4 @@
-namespace NotKilledByGoogle.Bot.GraveKeeper
+namespace NotKilledByGoogle.Bot.Grave
 {
     /// <summary>
     /// Represents the deceased one's kind of existence.

@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using NotKilledByGoogle.Bot.GraveKeeper;
+using NotKilledByGoogle.Bot.Grave;
 using Xunit;
 
 namespace NotKilledByGoogle.Tests

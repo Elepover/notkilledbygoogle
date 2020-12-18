@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Config;
+using NotKilledByGoogle.Bot.Grave;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 
 namespace NotKilledByGoogle.Bot
@@ -11,15 +13,37 @@ namespace NotKilledByGoogle.Bot
     internal class Program
     {
         private static readonly string Version = "0.1.4a";
-        private static readonly JsonConfigManager<BotConfig> ConfigManager = new() { FilePath = Path.Combine(Assembly.GetExecutingAssembly().Location, "config.json") };
+        private static readonly Stopwatch AppStopwatch = new();
+        private static readonly JsonConfigManager<BotConfig> ConfigManager = new()
+        {
+            FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json")
+        };
+        private static readonly CancellationTokenSource TokenSource = new();
+        private static GraveKeeper _keeper = null!;
+        private static int _cancelCounter = 3;
+
+        private static void OnFetchError(object? sender, FetchErrorEventArgs e)
+            => Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
+
+        private static void OnFetched(object? sender, FetchedEventArgs e)
+            => Info("Fetched graveyard data from " + e.FetchUrl);
         
         public static async Task Main(string[] args)
         {
+            AppStopwatch.Start();
             Info("Starting ᴺᴼᵀKilled by Google bot, version " + Version);
-            var sw = new Stopwatch();
-            sw.Start();
             try
             {
+                Info("Arming event handler...");
+                Console.CancelKeyPress += (_, eventArgs) =>
+                {
+                    eventArgs.Cancel = true;
+                    _cancelCounter--;
+                    if (_cancelCounter <= 0) Environment.Exit(1);
+                    Info($"Stopping... Press {_cancelCounter} more times to force exit.");
+                    TokenSource.Cancel();
+                };
+                
                 Info("Loading configurations from: " + ConfigManager.FilePath);
                 if (!await ConfigManager.ValidateConfigAsync())
                 {
@@ -30,14 +54,34 @@ namespace NotKilledByGoogle.Bot
                     Environment.Exit(1);
                 }
                 await ConfigManager.LoadConfigAsync();
+                _ = Utils.ThrowIfNull(ConfigManager.Config);
                 Info("Configurations loaded.");
                 
+                Info("Preparing Graveyard keeper...");
+                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation);
+                _keeper.FetchError += OnFetchError;
+                _keeper.Fetched += OnFetched;
+                _keeper.Start();
+                
+                Info("Preparing Telegram bot...");
+                // TODO: add bot logic
+                
+                Info($"Startup complete ({AppStopwatch.Elapsed:g}), main thread entering standby state...");
+                while (!TokenSource.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.Delay(5000, TokenSource.Token);
+                    }
+                    catch {}
+                }
+
+                Environment.Exit(0);
             }
             catch (Exception ex)
             {
-                Error("Startup failed: " + ex);
+                Error($"Startup failed after {AppStopwatch.Elapsed:c}: " + ex);
             }
-            
         }
     }
 }
