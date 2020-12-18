@@ -27,6 +27,8 @@ namespace NotKilledByGoogle.Bot.GraveKeeper
                     // ensure it's recognizable JSON
                     var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(rs, Gravestone.SerializerOptions);
                     Gravestones = Utils.ThrowIfNull(deserialized).ToArray();
+                    // set latest fetch time
+                    LatestSuccessfulFetch = DateTimeOffset.Now;
                     // notify all subscribers
                     Fetched?.Invoke(this, new EventArgs());
                 }
@@ -60,6 +62,10 @@ namespace NotKilledByGoogle.Bot.GraveKeeper
         /// Gravestones fetched from specified graveyard.
         /// </summary>
         public Gravestone[] Gravestones { get; private set; } = Array.Empty<Gravestone>();
+        /// <summary>
+        /// The timestamp of last successful fetch.
+        /// </summary>
+        public DateTimeOffset? LatestSuccessfulFetch { get; private set; }
 
         public GraveKeeper(string graveyardJsonLocation)
         {

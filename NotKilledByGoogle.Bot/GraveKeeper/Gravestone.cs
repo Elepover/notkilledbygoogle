@@ -27,11 +27,11 @@ namespace NotKilledByGoogle.Bot.GraveKeeper
         [JsonPropertyName("dateOpen")]
         public DateTimeOffset DateOpen { get; set; }
         [JsonPropertyName("description")]
-        public string Description { get; set; }
+        public string Description { get; set; } = "";
         [JsonPropertyName("link")]
-        public string ReferenceLink { get; set; }
+        public string ReferenceLink { get; set; } = "";
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         [JsonPropertyName("type")]
         public DeceasedType DeceasedType { get; set; }
 

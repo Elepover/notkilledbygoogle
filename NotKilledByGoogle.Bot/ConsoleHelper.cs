@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace NotKilledByGoogle.Bot
 {
-    public class ConsoleHelper
+    public static class ConsoleHelper
     {
         private static string GetPrefix(string severity, string caller) => $"[{DateTimeOffset.Now:G}][{severity}@{caller}]";
         

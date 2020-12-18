@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -45,14 +47,18 @@ namespace NotKilledByGoogle.Bot.Config
         /// Current configurations stored in this <see cref="JsonConfigManager{T}"/>.
         /// </summary>
         public T? Config { get; private set; }
+        /// <summary>
+        /// Configuration file's path.
+        /// </summary>
+        public string FilePath { get; set; }
         
         /// <summary>
         /// Load configurations from file.
         /// </summary>
         /// <inheritdoc cref="ReadConfigAsync"/>
-        public async Task<T> LoadConfigAsync(string path, CancellationToken cancellationToken = default)
+        public async Task<T> LoadConfigAsync(CancellationToken cancellationToken = default)
         {
-            Config = await ReadConfigAsync(path, cancellationToken);
+            Config = await ReadConfigAsync(FilePath, cancellationToken);
             return Config;
         }
 
@@ -60,10 +66,45 @@ namespace NotKilledByGoogle.Bot.Config
         /// Save configurations to file.
         /// </summary>
         /// <inheritdoc cref="ReadConfigAsync"/>
-        public Task SaveConfigAsync(string path, CancellationToken cancellationToken = default)
-            => WriteConfigAsync(Utils.ThrowIfNull(Config), path, cancellationToken);
+        public Task SaveConfigAsync(CancellationToken cancellationToken = default)
+            => WriteConfigAsync(Utils.ThrowIfNull(Config), FilePath, cancellationToken);
 
-        public Task CreateConfigAsync(string path, CancellationToken cancellationToken = default)
-            => WriteConfigAsync(new T(), path, cancellationToken);
+        /// <summary>
+        /// Create configurations file.
+        /// </summary>
+        /// <inheritdoc cref="ReadConfigAsync"/>
+        public Task CreateConfigAsync(CancellationToken cancellationToken = default)
+            => WriteConfigAsync(new T(), FilePath, cancellationToken);
+
+        /// <summary>
+        /// Validate the configurations file.
+        /// </summary>
+        /// <inheritdoc cref="ReadConfigAsync"/>
+        public async Task<bool> ValidateConfigAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await ReadConfigAsync(FilePath, cancellationToken);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Configurations validation failed: " + ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Backup configurations file (if it exists)
+        /// </summary>
+        public bool Backup()
+        {
+            if (File.Exists(FilePath))
+            {
+                File.Move(FilePath, FilePath + ".bak");
+                return true;
+            }
+            return false;
+        }
     }
 }
