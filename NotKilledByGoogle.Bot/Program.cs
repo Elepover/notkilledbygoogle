@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
+using NotKilledByGoogle.Bot.Grave.Helpers;
 using Telegram.Bot;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NotKilledByGoogle.Bot.Grave
+namespace NotKilledByGoogle.Bot.Grave.Helpers
 {
     public class DateTimeOffsetConverter : JsonConverter<DateTimeOffset>
     {

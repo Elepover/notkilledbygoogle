@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NotKilledByGoogle.Bot.Grave
+namespace NotKilledByGoogle.Bot.Grave.Helpers
 {
     public class GravestoneEqualityComparer : IEqualityComparer<Gravestone>
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NotKilledByGoogle.Bot.Grave;
+using NotKilledByGoogle.Bot.Grave.Helpers;
 using Xunit;
 
 namespace NotKilledByGoogle.Tests
