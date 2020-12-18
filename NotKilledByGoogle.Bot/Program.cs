@@ -65,16 +65,14 @@ namespace NotKilledByGoogle.Bot
                     var newGraveyard = _keeper.Gravestones;
 
                     // check if anything is "added"
-                    // TODO: implement IEqualityChecker -> only care about product name, other details ignored
-                    if (newGraveyard.Except(graveyard).Any())
+                    if (newGraveyard.Except(graveyard, new GravestoneEqualityComparer()).Any())
                     {
                         // TODO: add "new project (to be) killed by Google" broadcast
                         goto announcerCycleDone;
                     }
 
                     // check if anything is "removed"
-                    // TODO: implement IEqualityChecker
-                    if (graveyard.Except(newGraveyard).Any())
+                    if (graveyard.Except(newGraveyard, new GravestoneEqualityComparer()).Any())
                     {
                         // TODO: add "project revived by Google" broadcast
                     }
