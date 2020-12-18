@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
+using Telegram.Bot;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 
 namespace NotKilledByGoogle.Bot
@@ -19,9 +20,20 @@ namespace NotKilledByGoogle.Bot
             FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json")
         };
         private static readonly CancellationTokenSource TokenSource = new();
+        
         private static GraveKeeper _keeper = null!;
+        private static TelegramBotClient _bot = null!;
         private static int _cancelCounter = 3;
 
+        private static void OnKeyboardInterrupt(object? sender, ConsoleCancelEventArgs e)
+        {
+            e.Cancel = true;
+            _cancelCounter--;
+            if (_cancelCounter <= 0) Environment.Exit(1);
+            Info($"Stopping... Press {_cancelCounter} more times to force exit.");
+            TokenSource.Cancel();
+        }
+        
         private static void OnFetchError(object? sender, FetchErrorEventArgs e)
             => Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
 
@@ -35,14 +47,7 @@ namespace NotKilledByGoogle.Bot
             try
             {
                 Info("Arming event handler...");
-                Console.CancelKeyPress += (_, eventArgs) =>
-                {
-                    eventArgs.Cancel = true;
-                    _cancelCounter--;
-                    if (_cancelCounter <= 0) Environment.Exit(1);
-                    Info($"Stopping... Press {_cancelCounter} more times to force exit.");
-                    TokenSource.Cancel();
-                };
+                Console.CancelKeyPress += OnKeyboardInterrupt;
                 
                 Info("Loading configurations from: " + ConfigManager.FilePath);
                 if (!await ConfigManager.ValidateConfigAsync())
@@ -57,15 +62,16 @@ namespace NotKilledByGoogle.Bot
                 _ = Utils.ThrowIfNull(ConfigManager.Config);
                 Info("Configurations loaded.");
                 
+                Info("Preparing Telegram bot...");
+                _bot = new(ConfigManager.Config.ApiKey);
+                await _bot.TestApiAsync();
+                
                 Info("Preparing Graveyard keeper...");
-                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation);
+                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation) { UpdateInterval = 5000 };
                 _keeper.FetchError += OnFetchError;
                 _keeper.Fetched += OnFetched;
                 _keeper.Start();
-                
-                Info("Preparing Telegram bot...");
-                // TODO: add bot logic
-                
+
                 Info($"Startup complete ({AppStopwatch.Elapsed:g}), main thread entering standby state...");
                 while (!TokenSource.IsCancellationRequested)
                 {
