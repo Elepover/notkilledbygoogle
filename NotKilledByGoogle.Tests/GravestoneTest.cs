@@ -48,6 +48,16 @@ namespace NotKilledByGoogle.Tests
                 new() { Name = "Luke", Description = "Imbecile" },
                 new() { Name = "Material Design 2", Description = "Imbecile" }
             };
+            yield return new Gravestone?[]
+            {
+                new() { Name = "Luke", Description = "Imbecile" },
+                null
+            };
+            yield return new Gravestone?[]
+            {
+                null,
+                new() { Name = "Google+", Description = "Google, plus, something equals to..." }
+            };
         }
         
         [Theory]
