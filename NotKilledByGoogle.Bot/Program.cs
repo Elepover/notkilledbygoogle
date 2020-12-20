@@ -69,6 +69,7 @@ namespace NotKilledByGoogle.Bot
                     if (newGraveyard.Except(graveyard, new GravestoneEqualityComparer()).Any())
                     {
                         // TODO: add "new project (to be) killed by Google" broadcast
+                        // TODO: schedule new broadcasts
                         goto announcerCycleDone;
                     }
 
@@ -76,6 +77,7 @@ namespace NotKilledByGoogle.Bot
                     if (graveyard.Except(newGraveyard, new GravestoneEqualityComparer()).Any())
                     {
                         // TODO: add "project revived by Google" broadcast
+                        // TODO: cancel scheduled broadcast
                     }
                     
 announcerCycleDone:
