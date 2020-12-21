@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Grave
 {
@@ -7,11 +10,21 @@ namespace NotKilledByGoogle.Bot.Grave
     /// </summary>
     public class AnnouncementScheduler
     {
-        public delegate void AnnouncementEventHandler(object? sender, AnnouncementEventArgs e);
+        private const int MaxRetryAttempts = 3;
+        private readonly Dictionary<Gravestone, CancellationTokenSource> _scheduled = new();
+
         /// <summary>
         /// Raised when an announcement is made.
         /// </summary>
-        public event AnnouncementEventHandler? Announcement;
+        public event EventHandler<AnnouncementEventArgs>? Announcement;
+
+        /// <summary>
+        /// Check if a <see cref="Gravestone"/> has scheduled announcements.
+        /// </summary>
+        /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
+        /// <returns></returns>
+        public bool IsScheduled(Gravestone gravestone)
+            => _scheduled.ContainsKey(gravestone);
         
         /// <summary>
         /// Schedule an announcement.
@@ -20,7 +33,18 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <param name="timeout">How long should the <see cref="AnnouncementScheduler"/> wait until time is up.</param>
         public void Schedule(Gravestone gravestone, TimeSpan timeout)
         {
-            // TODO: implement it!
+            // add it to tracking list if keypair doesn't exist
+            if (!_scheduled.ContainsKey(gravestone))
+                _scheduled.Add(gravestone, new());
+            
+            // prepare the task
+            var cts = _scheduled[gravestone];
+            _ = Task.Run(async () =>
+            {
+                // doesn't need to catch TaskCanceledException: it's inside the task
+                await Task.Delay(timeout, cts.Token);
+                Announcement?.Invoke(this, new (gravestone));
+            });
         }
 
         /// <inheritdoc cref="Schedule(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
@@ -37,8 +61,8 @@ namespace NotKilledByGoogle.Bot.Grave
         public void Schedule(Gravestone gravestone, AnnouncementOptions? options = null)
         {
             options ??= AnnouncementOptions.Default;
-            foreach (var future in options.CriticalDays)
-                Schedule(gravestone, gravestone.DateClose.AddDays(-future));
+            foreach (var futureDays in options.CriticalDays)
+                Schedule(gravestone, gravestone.DateClose.AddDays(-futureDays));
         }
 
         /// <summary>
@@ -47,7 +71,14 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <param name="gravestone">The <see cref="Gravestone"/> associated with corresponding announcements.</param>
         public void Cancel(Gravestone gravestone)
         {
-            // TODO: implement it!
+            if (_scheduled.ContainsKey(gravestone))
+            {
+                // cancel all tasks
+                _scheduled[gravestone].Cancel();
+                // remove the pair from scheduled pool
+                _scheduled.Remove(gravestone);
+            }
+            else throw new InvalidOperationException("The gravestone isn't registered yet!");
         }
     }
 }
