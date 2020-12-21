@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Grave;
 using Xunit;
@@ -7,6 +8,24 @@ namespace NotKilledByGoogle.Tests
 {
     public class AnnouncementSchedulerTest
     {
+        public class DateTimeOffsetWrapper
+        {
+            public DateTimeOffsetWrapper(DateTimeOffset dateTimeOffset)
+            {
+                DateTimeOffset = dateTimeOffset;
+            }
+            public DateTimeOffset DateTimeOffset { get; }
+        }
+        
+        private static IEnumerable<DateTimeOffsetWrapper[]> PastDueAnnouncementDates()
+        {
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddSeconds(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddMinutes(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddHours(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddDays(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddMonths(-1)) };
+        }
+        
         [Fact]
         public async Task AnnouncementScheduling()
         {
@@ -53,11 +72,32 @@ namespace NotKilledByGoogle.Tests
         public void AnnouncementCancel()
         {
             var scheduler = new AnnouncementScheduler();
-            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
+            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMonths(1)};
             scheduler.Schedule(gravestone, new AnnouncementOptions(new []{ 1, 2, 3 }));
             
             Assert.True(scheduler.IsScheduled(gravestone));
             scheduler.Cancel(gravestone);
+            Assert.False(scheduler.IsScheduled(gravestone));
+        }
+
+        [Fact]
+        public void AnnouncementNow()
+        {
+            var scheduler = new AnnouncementScheduler();
+            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
+            scheduler.Schedule(gravestone, AnnouncementOptions.Default);
+            
+            Assert.False(scheduler.IsScheduled(gravestone));
+        }
+
+        [Theory]
+        [MemberData(nameof(PastDueAnnouncementDates))]
+        public void AnnouncementPastDue(DateTimeOffsetWrapper expected)
+        {
+            var scheduler = new AnnouncementScheduler();
+            var gravestone = new Gravestone() {DateClose = expected.DateTimeOffset};
+            scheduler.Schedule(gravestone, AnnouncementOptions.Default);
+            
             Assert.False(scheduler.IsScheduled(gravestone));
         }
     }

@@ -62,14 +62,19 @@ namespace NotKilledByGoogle.Bot.Grave
         {
             options ??= AnnouncementOptions.Default;
             foreach (var futureDays in options.CriticalDays)
-                Schedule(gravestone, gravestone.DateClose.AddDays(-futureDays));
+            {
+                var estimatedFuture = gravestone.DateClose.AddDays(-futureDays);
+                if (estimatedFuture <= DateTimeOffset.Now) continue;
+                Schedule(gravestone, estimatedFuture);
+            }
         }
 
         /// <summary>
         /// Cancel all related scheduled announcements.
         /// </summary>
         /// <param name="gravestone">The <see cref="Gravestone"/> associated with corresponding announcements.</param>
-        public void Cancel(Gravestone gravestone)
+        /// <param name="force">Do not throw exception when no scheduled for the <paramref name="gravestone"/> is found.</param>
+        public void Cancel(Gravestone gravestone, bool force = false)
         {
             if (_scheduled.ContainsKey(gravestone))
             {
@@ -78,7 +83,7 @@ namespace NotKilledByGoogle.Bot.Grave
                 // remove the pair from scheduled pool
                 _scheduled.Remove(gravestone);
             }
-            else throw new InvalidOperationException("The gravestone isn't registered yet!");
+            else if (!force) throw new InvalidOperationException("The gravestone isn't registered yet!");
         }
     }
 }

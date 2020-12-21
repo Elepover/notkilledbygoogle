@@ -26,6 +26,7 @@ namespace NotKilledByGoogle.Bot
         private static readonly CancellationTokenSource TokenSource = new();
         
         private static GraveKeeper _keeper = null!;
+        private static AnnouncementScheduler _scheduler = null!;
         private static TelegramBotClient _bot = null!;
         private static int _cancelCounter = 3;
 
@@ -47,15 +48,30 @@ namespace NotKilledByGoogle.Bot
         {
             // wait until GraveKeeper tells it that data is ready
             var tcs = new TaskCompletionSource();
+            var sw = new Stopwatch();
             GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => tcs.SetResult();
             _keeper.Fetched += oneTimeHandler;
+            sw.Start();
+            _keeper.Start();
+            Info("Awaiting graveyard data...");
             await tcs.Task;
+            sw.Stop();
             _keeper.Fetched -= oneTimeHandler;
             // ok it's ready now, cache it
             var graveyard = _keeper.Gravestones;
-            Info("Scheduling death announcements...");
-            // TODO: add death announcement scheduling
-            Info("Death announcer is ready.");
+            var skipped = 0;
+            Info($"Graveyard data fetched in {sw.Elapsed.TotalSeconds:F2}s, scheduling death announcements...");
+            foreach (var gravestone in graveyard)
+            {
+                if (gravestone.DateClose <= DateTimeOffset.Now)
+                {
+                    skipped++;
+                    continue;
+                }
+                _scheduler.Schedule(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                Info($"Scheduled death announcement for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name} at {gravestone.DateClose:F}.");
+            }
+            Info($"Death announcer is ready. (RIP for the {skipped} already dead products)");
             
             while (!TokenSource.IsCancellationRequested)
             {
@@ -66,18 +82,28 @@ namespace NotKilledByGoogle.Bot
                     var newGraveyard = _keeper.Gravestones;
 
                     // check if anything is "added"
-                    if (newGraveyard.Except(graveyard, new GravestoneEqualityComparer()).Any())
+                    var added = newGraveyard.Except(graveyard, new GravestoneEqualityComparer()).ToList();
+                    if (added.Any())
                     {
-                        // TODO: add "new project (to be) killed by Google" broadcast
-                        // TODO: schedule new broadcasts
+                        foreach (var gravestone in added)
+                        {
+                            _scheduler.Schedule(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                            Info($"New product joined the Being Alive Club: {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}.");
+                            // TODO: add "new project (to be) killed by Google" broadcast
+                        }
                         goto announcerCycleDone;
                     }
 
                     // check if anything is "removed"
-                    if (graveyard.Except(newGraveyard, new GravestoneEqualityComparer()).Any())
+                    var removed = graveyard.Except(newGraveyard, new GravestoneEqualityComparer()).ToList();
+                    if (removed.Any())
                     {
-                        // TODO: add "project revived by Google" broadcast
-                        // TODO: cancel scheduled broadcast
+                        foreach (var gravestone in removed)
+                        {
+                            _scheduler.Cancel(gravestone, true);
+                            Info($"HOLY SHIT a project was SAVED by Google! It was {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}");
+                            // TODO: announce produces revived by Google
+                        }
                     }
                     
 announcerCycleDone:
@@ -97,6 +123,12 @@ announcerCycleDone:
 
         private static void OnFetched(object? sender, FetchedEventArgs e)
             => Info("Fetched graveyard data from " + e.FetchUrl);
+
+        private static void OnAnnouncement(object? sender, AnnouncementEventArgs e)
+        {
+            Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
+            // TODO: finish broadcasting logic
+        }
         
         public static async Task Main(string[] args)
         {
@@ -122,23 +154,25 @@ announcerCycleDone:
                 
                 Info("Preparing Telegram bot...");
                 _bot = new(ConfigManager.Config.ApiKey);
-                await _bot.TestApiAsync();
+                _bot.TestApiAsync().Wait(TokenSource.Token);
                 
                 Info("Preparing graveyard keeper...");
-                _keeper = new GraveKeeper(ConfigManager.Config.GraveyardJsonLocation);
+                _keeper = new (ConfigManager.Config.GraveyardJsonLocation);
                 _keeper.FetchError += OnFetchError;
                 _keeper.Fetched += OnFetched;
-                _keeper.Start();
+                // NOT starting keeper just yet, let the announcer do it.
                 
                 Info("Preparing death announcer...");
+                _scheduler = new();
+                _scheduler.Announcement += OnAnnouncement;
                 _ = Task.Run(DeathAnnouncer);
 
-                Info($"Startup complete ({AppStopwatch.Elapsed:g}), main thread entering standby state...");
+                Info($"Startup complete in {AppStopwatch.Elapsed.TotalSeconds:F2}s, main thread entering standby state...");
                 while (!TokenSource.IsCancellationRequested)
                 {
                     try
                     {
-                        await Task.Delay(5000, TokenSource.Token);
+                        await Task.Delay(Timeout.Infinite, TokenSource.Token);
                     }
                     // ignore that TaskCanceledException: we're terminating everything
                     catch (TaskCanceledException) {}

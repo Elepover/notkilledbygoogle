@@ -15,7 +15,5 @@ namespace NotKilledByGoogle.Bot.Config
         public long AdminId { get; set; } = 0L;
         [JsonPropertyName("graveyardJsonLocation")]
         public string GraveyardJsonLocation { get; set; } = "https://raw.githubusercontent.com/codyogden/killedbygoogle/main/graveyard.json";
-        [JsonPropertyName("graveyardCache")]
-        public List<Gravestone> GraveyardCache { get; set; } = new();
     }
 }
