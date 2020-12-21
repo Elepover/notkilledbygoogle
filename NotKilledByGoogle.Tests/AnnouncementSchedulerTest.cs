@@ -27,7 +27,7 @@ namespace NotKilledByGoogle.Tests
         }
         
         [Fact]
-        public async Task AnnouncementScheduling()
+        public async Task Scheduling()
         {
             var scheduler = new AnnouncementScheduler();
             var receivedEventTask = Assert.RaisesAsync<AnnouncementEventArgs>(
@@ -45,7 +45,7 @@ namespace NotKilledByGoogle.Tests
         }
         
         [Fact]
-        public async Task AnnouncementMultiScheduling()
+        public async Task MultiScheduling()
         {
             const int expectedAnnouncements = 3;
             var count = 0;
@@ -69,7 +69,7 @@ namespace NotKilledByGoogle.Tests
         }
 
         [Fact]
-        public void AnnouncementCancel()
+        public void Cancellation()
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMonths(1)};
@@ -81,7 +81,7 @@ namespace NotKilledByGoogle.Tests
         }
 
         [Fact]
-        public void AnnouncementNow()
+        public void Now()
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
@@ -92,7 +92,7 @@ namespace NotKilledByGoogle.Tests
 
         [Theory]
         [MemberData(nameof(PastDueAnnouncementDates))]
-        public void AnnouncementPastDue(DateTimeOffsetWrapper expected)
+        public void PastDue(DateTimeOffsetWrapper expected)
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = expected.DateTimeOffset};
