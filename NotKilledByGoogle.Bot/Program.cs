@@ -9,6 +9,8 @@ using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
 using NotKilledByGoogle.Bot.Grave.Helpers;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 
 namespace NotKilledByGoogle.Bot
@@ -89,7 +91,7 @@ namespace NotKilledByGoogle.Bot
                         {
                             _scheduler.Schedule(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                             Info($"New product joined the Being Alive Club: {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}.");
-                            // TODO: add "new project (to be) killed by Google" broadcast
+                            await Announce(AnnouncementType.NewVictim, gravestone);
                         }
                         goto announcerCycleDone;
                     }
@@ -102,7 +104,7 @@ namespace NotKilledByGoogle.Bot
                         {
                             _scheduler.Cancel(gravestone, true);
                             Info($"HOLY SHIT a project was SAVED by Google! It was {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}");
-                            // TODO: announce produces revived by Google
+                            await Announce(AnnouncementType.ProductSaved, gravestone);
                         }
                     }
                     
@@ -124,10 +126,58 @@ announcerCycleDone:
         private static void OnFetched(object? sender, FetchedEventArgs e)
             => Info("Fetched graveyard data from " + e.FetchUrl);
 
-        private static void OnAnnouncement(object? sender, AnnouncementEventArgs e)
+        private static async void OnAnnouncement(object? sender, AnnouncementEventArgs e)
         {
             Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
-            // TODO: finish broadcasting logic
+            await Announce((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+        }
+
+        private static async Task SendMessage(string message)
+        {
+            foreach (var id in ConfigManager.Config.BroadcastId)
+            {
+                await _bot.SendTextMessageAsync(new(id), message, ParseMode.MarkdownV2, true);
+            }
+        }
+
+        private static async Task Announce(AnnouncementType type, Gravestone gravestone)
+        {
+            switch (type)
+            {
+                case AnnouncementType.Killed:
+                    await SendMessage(
+                        string.Format(MessageFormatter.KilledByGoogle,
+                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
+                                      gravestone.Name,
+                                      gravestone.Description));
+                    break;
+                case AnnouncementType.Killing:
+                    await SendMessage(
+                        string.Format(MessageFormatter.KillingByGoogle,
+                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
+                                      gravestone.Name,
+                                      MessageFormatter.FormatTimeLeft(gravestone.DateClose - DateTimeOffset.Now)));
+                    break;
+                case AnnouncementType.NewVictim:
+                    await SendMessage(
+                        string.Format(MessageFormatter.NewProductMurdered,
+                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
+                                      gravestone.Name,
+                                      gravestone.Description
+                        ));
+                    break;
+                case AnnouncementType.ProductSaved:
+                    await SendMessage(
+                        string.Format(MessageFormatter.ProductSaved,
+                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
+                                      gravestone.Name,
+                                      gravestone.Description
+                        ));
+                    break;
+                default:
+                    Warning($"Unknown announcement type passed to bot: {type}, gravestone name: {gravestone.Name}, ditched.");
+                    break;
+            }
         }
         
         public static async Task Main(string[] args)
