@@ -27,8 +27,15 @@ namespace NotKilledByGoogle.Bot
 
         public static string FormatTimeLeft(TimeSpan left)
         {
-            if (left < TimeSpan.FromDays(2)) return "tomorrow";
-            else return $"in {Math.Round(left.TotalDays)} days";
+            if (left < TimeSpan.FromHours(2)) return "very soon";
+            if (left <= TimeSpan.FromDays(1)) return "tomorrow";
+            var leftDays = left.TotalDays;
+            double result;
+            if (Math.Abs(Math.Truncate(leftDays) - leftDays) < Double.Epsilon)
+                result = leftDays;
+            else
+                result = Math.Truncate(leftDays) + 1;
+            return $"in {result} days";
         }
     }
 }
