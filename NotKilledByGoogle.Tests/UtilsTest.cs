@@ -41,7 +41,7 @@ namespace NotKilledByGoogle.Tests
         public async Task TestDelayCancellation()
         {
             var sw = new Stopwatch();
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource();
             
             var waitTask = Assert.ThrowsAsync<TaskCanceledException>(async () => await Utils.Delay(TimeSpan.FromDays(365), cts.Token));
             cts.Cancel();
@@ -49,7 +49,6 @@ namespace NotKilledByGoogle.Tests
             await waitTask;
 
             Assert.InRange(sw.Elapsed.TotalMilliseconds, 0.0, 50.0);
-            cts.Dispose();
         }
     }
 }

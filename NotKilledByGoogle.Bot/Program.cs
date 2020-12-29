@@ -74,12 +74,13 @@ namespace NotKilledByGoogle.Bot
                 Info($"Scheduled death announcement for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
             }
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
-            
-            while (!MainCancellationTokenSource.IsCancellationRequested)
+
+            var token = MainCancellationTokenSource.Token;
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(DeathAnnouncerInterval, MainCancellationTokenSource.Token);
+                    await Task.Delay(DeathAnnouncerInterval, token);
                     // get latest graveyard status
                     var newGraveyard = _keeper.Gravestones;
 
@@ -222,11 +223,12 @@ announcerCycleDone:
                 _ = Task.Run(DeathAnnouncer);
 
                 Info($"Startup complete in {AppStopwatch.Elapsed.TotalSeconds:F2}s, main thread entering standby state...");
-                while (!MainCancellationTokenSource.IsCancellationRequested)
+                var token = MainCancellationTokenSource.Token;
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        await Task.Delay(Timeout.Infinite, MainCancellationTokenSource.Token);
+                        await Task.Delay(Timeout.Infinite, token);
                     }
                     // ignore that TaskCanceledException: we're terminating everything
                     catch (TaskCanceledException) {}

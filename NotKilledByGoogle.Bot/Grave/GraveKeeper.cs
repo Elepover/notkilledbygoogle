@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -22,15 +21,16 @@ namespace NotKilledByGoogle.Bot.Grave
         private async Task GraveyardUpdateLoop()
         {
             _busy = true;
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            var token = _cancellationTokenSource.Token;
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
                     // fetch JSON from server
-                    using var response = await _client.GetAsync(_graveyardJsonLocation, _cancellationTokenSource.Token);
+                    using var response = await _client.GetAsync(_graveyardJsonLocation, token);
                     response.EnsureSuccessStatusCode();
                     // ensure it's recognizable JSON
-                    var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(await response.Content.ReadAsStreamAsync(), Gravestone.SerializerOptions);
+                    var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(await response.Content.ReadAsStreamAsync(token), Gravestone.SerializerOptions, token);
                     Gravestones = Utils.ThrowIfNull(deserialized).ToArray();
                     // set latest fetch time
                     LatestSuccessfulFetch = DateTimeOffset.Now;
@@ -42,7 +42,7 @@ namespace NotKilledByGoogle.Bot.Grave
                     FetchError?.Invoke(this, new FetchErrorEventArgs(ex, LatestSuccessfulFetch ?? DateTimeOffset.UnixEpoch, _graveyardJsonLocation));
                 }
 
-                try { await Task.Delay(UpdateInterval, _cancellationTokenSource.Token); } finally { } 
+                try { await Task.Delay(UpdateInterval, token); } finally { } 
             }
             _busy = false;
         }
