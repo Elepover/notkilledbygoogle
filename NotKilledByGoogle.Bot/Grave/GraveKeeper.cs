@@ -1,16 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Grave
 {
-    public class GraveKeeper
+    public class GraveKeeper : IDisposable
     {
         private readonly string _graveyardJsonLocation;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly HttpClient _client = new()
+        {
+            DefaultRequestVersion = new(2, 0),
+            Timeout = TimeSpan.FromSeconds(30)
+        };
         private bool _busy = false;
 
         private async Task GraveyardUpdateLoop()
@@ -21,11 +27,10 @@ namespace NotKilledByGoogle.Bot.Grave
                 try
                 {
                     // fetch JSON from server
-                    var req = WebRequest.CreateHttp(_graveyardJsonLocation);
-                    using var res = await req.GetResponseAsync();
-                    await using var rs = res.GetResponseStream();
+                    using var response = await _client.GetAsync(_graveyardJsonLocation, _cancellationTokenSource.Token);
+                    response.EnsureSuccessStatusCode();
                     // ensure it's recognizable JSON
-                    var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(rs, Gravestone.SerializerOptions);
+                    var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(await response.Content.ReadAsStreamAsync(), Gravestone.SerializerOptions);
                     Gravestones = Utils.ThrowIfNull(deserialized).ToArray();
                     // set latest fetch time
                     LatestSuccessfulFetch = DateTimeOffset.Now;
@@ -83,6 +88,22 @@ namespace NotKilledByGoogle.Bot.Grave
         public void Stop()
         {
             _cancellationTokenSource.Cancel();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing) 
+            {
+                _client.Dispose();
+                _cancellationTokenSource.Dispose();
+            }
+            // free native resources if there are any.
         }
     }
 }

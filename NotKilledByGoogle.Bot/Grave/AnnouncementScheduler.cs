@@ -8,7 +8,7 @@ namespace NotKilledByGoogle.Bot.Grave
     /// <summary>
     /// Provides methods for scheduling announcements.
     /// </summary>
-    public class AnnouncementScheduler
+    public class AnnouncementScheduler : IDisposable
     {
         private readonly Dictionary<Gravestone, CancellationTokenSource> _scheduled = new();
         private int _scheduledCount = 0;
@@ -96,10 +96,29 @@ namespace NotKilledByGoogle.Bot.Grave
             {
                 // cancel all tasks
                 _scheduled[gravestone].Cancel();
+                _scheduled[gravestone].Dispose();
                 // remove the pair from scheduled pool
                 _scheduled.Remove(gravestone);
             }
             else if (!force) throw new InvalidOperationException("The gravestone isn't registered yet!");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                foreach (var (_, cts) in _scheduled)
+                {
+                    cts.Dispose();
+                }
+            }
+            // free native resources if there are any.
         }
     }
 }

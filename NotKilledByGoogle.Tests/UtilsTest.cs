@@ -49,6 +49,7 @@ namespace NotKilledByGoogle.Tests
             await waitTask;
 
             Assert.InRange(sw.Elapsed.TotalMilliseconds, 0.0, 50.0);
+            cts.Dispose();
         }
     }
 }
