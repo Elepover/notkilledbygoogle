@@ -10,7 +10,7 @@ namespace NotKilledByGoogle.Bot.Grave
     public class GraveKeeper
     {
         private readonly string _graveyardJsonLocation;
-        private CancellationTokenSource _cancellationTokenSource = new();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
         private bool _busy = false;
 
         private async Task GraveyardUpdateLoop()
@@ -37,7 +37,7 @@ namespace NotKilledByGoogle.Bot.Grave
                     FetchError?.Invoke(this, new FetchErrorEventArgs(ex, LatestSuccessfulFetch ?? DateTimeOffset.UnixEpoch, _graveyardJsonLocation));
                 }
 
-                await Task.Delay(UpdateInterval);
+                try { await Task.Delay(UpdateInterval, _cancellationTokenSource.Token); } finally { } 
             }
             _busy = false;
         }

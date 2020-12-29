@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Config
 {
-    public class JsonConfigManager<T> where T : class, new()
+    public class JsonConfigManager<T> : IConfigManager<T> where T : class, new()
     {
         private static readonly JsonSerializerOptions DefaultSerializerOptions = new()
         {

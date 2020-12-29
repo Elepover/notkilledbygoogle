@@ -14,17 +14,17 @@ using static NotKilledByGoogle.Bot.ConsoleHelper;
 
 namespace NotKilledByGoogle.Bot
 {
-    internal class Program
+    internal static class Program
     {
         private const string Version = "0.1.4a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         private static readonly Stopwatch AppStopwatch = new();
-        private static readonly JsonConfigManager<BotConfig> ConfigManager = new()
+        private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>()
         {
             FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json")
         };
-        private static readonly CancellationTokenSource TokenSource = new();
+        private static readonly CancellationTokenSource MainCancellationTokenSource = new();
         
         private static GraveKeeper _keeper = null!;
         private static AnnouncementScheduler _scheduler = null!;
@@ -42,7 +42,8 @@ namespace NotKilledByGoogle.Bot
             Info("Attempting to save configurations...");
             await ConfigManager.SaveConfigAsync();
             Info("Cancelling running tasks...");
-            TokenSource.Cancel();
+            _keeper?.Stop();
+            MainCancellationTokenSource.Cancel();
         }
 
         private static async Task DeathAnnouncer()
@@ -74,11 +75,11 @@ namespace NotKilledByGoogle.Bot
             }
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
             
-            while (!TokenSource.IsCancellationRequested)
+            while (!MainCancellationTokenSource.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(DeathAnnouncerInterval, TokenSource.Token);
+                    await Task.Delay(DeathAnnouncerInterval, MainCancellationTokenSource.Token);
                     // get latest graveyard status
                     var newGraveyard = _keeper.Gravestones;
 
@@ -205,7 +206,7 @@ announcerCycleDone:
                 Info("Preparing Telegram bot...");
                 _bot = new(ConfigManager.Config.ApiKey);
                 if (!Debugger.IsAttached)
-                    _bot.TestApiAsync().Wait(TokenSource.Token);
+                    _bot.TestApiAsync().Wait(MainCancellationTokenSource.Token);
                 else
                     Info("Skipped: in debug mode.");
                 
@@ -221,11 +222,11 @@ announcerCycleDone:
                 _ = Task.Run(DeathAnnouncer);
 
                 Info($"Startup complete in {AppStopwatch.Elapsed.TotalSeconds:F2}s, main thread entering standby state...");
-                while (!TokenSource.IsCancellationRequested)
+                while (!MainCancellationTokenSource.IsCancellationRequested)
                 {
                     try
                     {
-                        await Task.Delay(Timeout.Infinite, TokenSource.Token);
+                        await Task.Delay(Timeout.Infinite, MainCancellationTokenSource.Token);
                     }
                     // ignore that TaskCanceledException: we're terminating everything
                     catch (TaskCanceledException) {}
