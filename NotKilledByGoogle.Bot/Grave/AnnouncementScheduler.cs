@@ -10,7 +10,6 @@ namespace NotKilledByGoogle.Bot.Grave
     /// </summary>
     public class AnnouncementScheduler
     {
-        private const int MaxRetryAttempts = 3;
         private readonly Dictionary<Gravestone, CancellationTokenSource> _scheduled = new();
         private int _scheduledCount = 0;
 

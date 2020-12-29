@@ -14,7 +14,7 @@ namespace NotKilledByGoogle.Bot.Grave
         /// Default option, where:<br />
         /// <see cref="CriticalDays"/> = {0}.
         /// </summary>
-        public static readonly AnnouncementOptions Default = new AnnouncementOptions(new []{0});
+        public static readonly AnnouncementOptions Default = new (new []{0});
         
         /// <summary>
         /// Determines when should the <see cref="AnnouncementScheduler"/> make announcements.
