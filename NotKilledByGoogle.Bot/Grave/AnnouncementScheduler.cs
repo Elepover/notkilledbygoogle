@@ -12,6 +12,7 @@ namespace NotKilledByGoogle.Bot.Grave
     {
         private const int MaxRetryAttempts = 3;
         private readonly Dictionary<Gravestone, CancellationTokenSource> _scheduled = new();
+        private int _scheduledCount = 0;
 
         /// <summary>
         /// Raised when an announcement is made.
@@ -25,13 +26,18 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <returns></returns>
         public bool IsScheduled(Gravestone gravestone)
             => _scheduled.ContainsKey(gravestone);
+
+        /// <summary>
+        /// Get the count of scheduled announcements.
+        /// </summary>
+        public int ScheduledCount => _scheduledCount;
         
         /// <summary>
-        /// Schedule an announcement.
+        /// Schedule an announcement and return when the announcement task is started.
         /// </summary>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="timeout">How long should the <see cref="AnnouncementScheduler"/> wait until time is up.</param>
-        public void Schedule(Gravestone gravestone, TimeSpan timeout)
+        public async Task ScheduleAsync(Gravestone gravestone, TimeSpan timeout)
         {
             // add it to tracking list if keypair doesn't exist
             if (!_scheduled.ContainsKey(gravestone))
@@ -39,33 +45,44 @@ namespace NotKilledByGoogle.Bot.Grave
             
             // prepare the task
             var cts = _scheduled[gravestone];
+            var tcs = new TaskCompletionSource();
             _ = Task.Run(async () =>
             {
-                // doesn't need to catch TaskCanceledException: it's inside the task
-                await Task.Delay(timeout, cts.Token);
-                Announcement?.Invoke(this, new (gravestone));
+                try
+                {
+                    Interlocked.Increment(ref _scheduledCount);
+                    // ok, the task is ready, you may continue
+                    tcs.SetResult();
+                    await Utils.Delay(timeout, cts.Token);
+                    Announcement?.Invoke(this, new (gravestone));
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _scheduledCount);
+                }
             });
+            await tcs.Task;
         }
 
-        /// <inheritdoc cref="Schedule(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
+        /// <inheritdoc cref="ScheduleAsync(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="future">Time in the future when the announcement should be made.</param>
-        public void Schedule(Gravestone gravestone, DateTimeOffset future)
-            => Schedule(gravestone, future - DateTimeOffset.Now);
+        public Task ScheduleAsync(Gravestone gravestone, DateTimeOffset future)
+            => ScheduleAsync(gravestone, future - DateTimeOffset.Now);
         
         /// <summary>
         /// Automatically schedule announcements based on info provided in <see cref="Gravestone"/>.
         /// </summary>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="options">Specifies how <see cref="AnnouncementScheduler"/> should make a schedule based on <see cref="Gravestone"/> info.</param>
-        public void Schedule(Gravestone gravestone, AnnouncementOptions? options = null)
+        public async Task ScheduleAsync(Gravestone gravestone, AnnouncementOptions? options = null)
         {
             options ??= AnnouncementOptions.Default;
             foreach (var futureDays in options.CriticalDays)
             {
                 var estimatedFuture = gravestone.DateClose.AddDays(-futureDays);
                 if (estimatedFuture <= DateTimeOffset.Now) continue;
-                Schedule(gravestone, estimatedFuture);
+                await ScheduleAsync(gravestone, estimatedFuture);
             }
         }
 

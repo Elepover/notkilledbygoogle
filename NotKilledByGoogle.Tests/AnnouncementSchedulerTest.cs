@@ -36,7 +36,7 @@ namespace NotKilledByGoogle.Tests
                 async () =>
                 {
                     var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMilliseconds(100)};
-                    scheduler.Schedule(gravestone, AnnouncementOptions.Default);
+                    await scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
                     // counter the overheads of scheduling
                     await Task.Delay(250);
                 });
@@ -59,7 +59,7 @@ namespace NotKilledByGoogle.Tests
             
             for (int expected = expectedAnnouncements; expected >= 1; expected--)
             {
-                scheduler.Schedule(gravestone, TimeSpan.FromMilliseconds(expected * 100));   
+                await scheduler.ScheduleAsync(gravestone, TimeSpan.FromMilliseconds(expected * 100));   
             }
             
             // counter performance overhead to ensure better success possibility
@@ -73,7 +73,7 @@ namespace NotKilledByGoogle.Tests
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMonths(1)};
-            scheduler.Schedule(gravestone, new AnnouncementOptions(new []{ 1, 2, 3 }));
+            scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(new []{ 1, 2, 3 }));
             
             Assert.True(scheduler.IsScheduled(gravestone));
             scheduler.Cancel(gravestone);
@@ -85,7 +85,7 @@ namespace NotKilledByGoogle.Tests
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
-            scheduler.Schedule(gravestone, AnnouncementOptions.Default);
+            scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
             
             Assert.False(scheduler.IsScheduled(gravestone));
         }
@@ -96,7 +96,7 @@ namespace NotKilledByGoogle.Tests
         {
             var scheduler = new AnnouncementScheduler();
             var gravestone = new Gravestone() {DateClose = expected.DateTimeOffset};
-            scheduler.Schedule(gravestone, AnnouncementOptions.Default);
+            scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
             
             Assert.False(scheduler.IsScheduled(gravestone));
         }

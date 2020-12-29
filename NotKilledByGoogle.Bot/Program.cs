@@ -9,7 +9,6 @@ using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
 using NotKilledByGoogle.Bot.Grave.Helpers;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 
@@ -70,10 +69,10 @@ namespace NotKilledByGoogle.Bot
                     skipped++;
                     continue;
                 }
-                _scheduler.Schedule(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
-                Info($"Scheduled death announcement for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name} at {gravestone.DateClose:F}.");
+                await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                Info($"Scheduled death announcement for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
             }
-            Info($"Death announcer is ready. (RIP for the {skipped} already dead products)");
+            Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
             
             while (!TokenSource.IsCancellationRequested)
             {
@@ -89,7 +88,7 @@ namespace NotKilledByGoogle.Bot
                     {
                         foreach (var gravestone in added)
                         {
-                            _scheduler.Schedule(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                            await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                             Info($"New product joined the Being Alive Club: {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}.");
                             await Announce(AnnouncementType.NewVictim, gravestone);
                         }
@@ -111,6 +110,7 @@ namespace NotKilledByGoogle.Bot
 announcerCycleDone:
                     // update the cached graveyard
                     graveyard = newGraveyard;
+                    Info($"Graveyard updated, {_scheduler.ScheduledCount} announcements pending.");
                 }
                 catch (TaskCanceledException) {}
                 catch (Exception ex)
@@ -204,7 +204,10 @@ announcerCycleDone:
                 
                 Info("Preparing Telegram bot...");
                 _bot = new(ConfigManager.Config.ApiKey);
-                _bot.TestApiAsync().Wait(TokenSource.Token);
+                if (!Debugger.IsAttached)
+                    _bot.TestApiAsync().Wait(TokenSource.Token);
+                else
+                    Info("Skipped: in debug mode.");
                 
                 Info("Preparing graveyard keeper...");
                 _keeper = new (ConfigManager.Config.GraveyardJsonLocation);
