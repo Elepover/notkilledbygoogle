@@ -17,21 +17,27 @@ namespace NotKilledByGoogle.Bot
 {
     internal static class Program
     {
+        #region Compile-time configurations
         private const string Version = "0.1.13a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
+        #endregion
+
+        #region Runtime "global" variables
         private static readonly Stopwatch AppStopwatch = new();
         private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>()
         {
             FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json")
         };
         private static readonly CancellationTokenSource MainCancellationTokenSource = new();
-        
+
         private static GraveKeeper _keeper = null!;
         private static AnnouncementScheduler _scheduler = null!;
         private static TelegramBotClient _bot = null!;
         private static int _cancelCounter = 3;
+        #endregion
 
+        #region Event handlers
         private static async void OnKeyboardInterrupt(object? sender, ConsoleCancelEventArgs e)
         {
             e.Cancel = true;
@@ -47,9 +53,44 @@ namespace NotKilledByGoogle.Bot
             // no need to stop bot receiving: we started receiving with CancellationToken
             MainCancellationTokenSource.Cancel();
         }
+        
+        private static void OnFetchError(object? sender, FetchErrorEventArgs e)
+            => Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
 
+        private static void OnFetched(object? sender, FetchedEventArgs e)
+            => Info("Fetched graveyard data from " + e.FetchUrl);
+
+        private static async void OnAnnouncement(object? sender, AnnouncementEventArgs e)
+        {
+            Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
+            await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+        }
+
+        private static void OnUpdate(object? sender, UpdateEventArgs e)
+        {
+            try
+            {
+                if (e.Update.Type == UpdateType.ChannelPost)
+                {
+                    Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
+                }
+            }
+            catch (Exception ex)
+            {
+                Error("Error processing update: " + ex);
+            }
+        }
+        #endregion
+
+        #region Thread and task logics
+        /// <summary>
+        /// Death announcer's logic. DON'T USE IT AS AN API.
+        /// </summary>
+        /// <returns></returns>
         private static async Task DeathAnnouncer()
         {
+            // STAGE 1: SETUP
+            
             // wait until GraveKeeper tells it that data is ready
             var tcs = new TaskCompletionSource();
             var sw = new Stopwatch();
@@ -61,10 +102,13 @@ namespace NotKilledByGoogle.Bot
             await tcs.Task;
             sw.Stop();
             _keeper.Fetched -= oneTimeHandler;
-            // ok it's ready now, cache it
+            
+            // ok it's ready now, cache it as initial graveyard
             var graveyard = _keeper.Gravestones;
             var skipped = 0;
             Info($"Graveyard data fetched in {sw.Elapsed.TotalSeconds:F2}s, scheduling death announcements...");
+            
+            // make initial schedules
             foreach (var gravestone in graveyard)
             {
                 if (gravestone.DateClose <= DateTimeOffset.Now)
@@ -75,8 +119,11 @@ namespace NotKilledByGoogle.Bot
                 var scheduledAnnouncementCount = await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                 Info($"Scheduled {scheduledAnnouncementCount} death announcement(s) for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
             }
+            
+            // ready, enter next stage
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
 
+            // STAGE 2: UPDATE LOOP
             var token = MainCancellationTokenSource.Token;
             while (!token.IsCancellationRequested)
             {
@@ -94,7 +141,7 @@ namespace NotKilledByGoogle.Bot
                         {
                             await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                             Info($"New product joined the Being Alive Club: {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}.");
-                            await Announce(AnnouncementType.NewVictim, gravestone);
+                            await AnnounceAsync(AnnouncementType.NewVictim, gravestone);
                         }
                         goto announcerCycleDone;
                     }
@@ -107,12 +154,12 @@ namespace NotKilledByGoogle.Bot
                         {
                             _scheduler.Cancel(gravestone, true);
                             Info($"HOLY SHIT a project was SAVED by Google! It was {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}");
-                            await Announce(AnnouncementType.ProductSaved, gravestone);
+                            await AnnounceAsync(AnnouncementType.ProductSaved, gravestone);
                         }
                     }
                     
 announcerCycleDone:
-                    // update the cached graveyard
+                    // finalize: update the cached graveyard
                     graveyard = newGraveyard;
                     Info($"Graveyard updated, {_scheduler.ScheduledCount} announcements pending.");
                 }
@@ -123,62 +170,49 @@ announcerCycleDone:
                 }
             }
         }
-        
-        private static void OnFetchError(object? sender, FetchErrorEventArgs e)
-            => Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
+        #endregion
 
-        private static void OnFetched(object? sender, FetchedEventArgs e)
-            => Info("Fetched graveyard data from " + e.FetchUrl);
-
-        private static async void OnAnnouncement(object? sender, AnnouncementEventArgs e)
-        {
-            Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
-            await Announce((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
-        }
-
-        private static void OnUpdate(object? sender, UpdateEventArgs e)
-        {
-            try
-            {
-                if (e.Update.Type == UpdateType.ChannelPost)
-                {
-                    Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
-                }
-            }
-            catch (Exception ex)
-            {
-                Error("Error processing update: " + ex);
-            }
-        }
-
-        private static async Task SendMessage(string message)
+        #region Private APIs or "snippets"
+        /// <summary>
+        /// Send a message through Telegram bot asynchronously.
+        /// </summary>
+        /// <param name="message">Message body, encoded with <see cref="ParseMode.MarkdownV2"/>.</param>
+        /// <returns></returns>
+        private static async Task SendMessageAsync(string message)
         {
             foreach (var id in ConfigManager.Config.BroadcastId)
             {
+                Info($"Sending message to chat {id}...");
                 await _bot.SendTextMessageAsync(new(id), message, ParseMode.MarkdownV2, true);
             }
         }
 
-        private static async Task Announce(AnnouncementType type, Gravestone gravestone)
+        /// <summary>
+        /// Make an announcement through Telegram bot asynchronously.
+        /// </summary>
+        /// <param name="type">Announcement type.</param>
+        /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
+        /// <returns></returns>
+        private static async Task AnnounceAsync(AnnouncementType type, Gravestone gravestone)
         {
             switch (type)
             {
                 case AnnouncementType.Killed:
-                    await SendMessage(
+                    await SendMessageAsync(
                         string.Format(MessageFormatter.KilledByGoogle,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
                                       gravestone.Description));
                     break;
                 case AnnouncementType.Killing:
-                    await SendMessage(
+                    await SendMessageAsync(
                         string.Format(MessageFormatter.KillingByGoogle,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
                                       MessageFormatter.FormatTimeLeft(gravestone.DateClose - DateTimeOffset.Now)));
                     break;
                 case AnnouncementType.NewVictim:
-                    await SendMessage(
+                    await SendMessageAsync(
                         string.Format(MessageFormatter.NewProductMurdered,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
@@ -186,7 +220,7 @@ announcerCycleDone:
                         ));
                     break;
                 case AnnouncementType.ProductSaved:
-                    await SendMessage(
+                    await SendMessageAsync(
                         string.Format(MessageFormatter.ProductSaved,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
@@ -198,6 +232,7 @@ announcerCycleDone:
                     break;
             }
         }
+        #endregion
         
         public static async Task Main(string[] args)
         {
