@@ -9,6 +9,7 @@ using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
 using NotKilledByGoogle.Bot.Grave.Helpers;
 using Telegram.Bot;
+using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using static NotKilledByGoogle.Bot.ConsoleHelper;
 
@@ -16,7 +17,7 @@ namespace NotKilledByGoogle.Bot
 {
     internal static class Program
     {
-        private const string Version = "0.1.4a";
+        private const string Version = "0.1.12a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         private static readonly Stopwatch AppStopwatch = new();
@@ -43,6 +44,7 @@ namespace NotKilledByGoogle.Bot
             await ConfigManager.SaveConfigAsync();
             Info("Cancelling running tasks...");
             _keeper?.Stop();
+            // no need to stop bot receiving: we started receiving with CancellationToken
             MainCancellationTokenSource.Cancel();
         }
 
@@ -134,6 +136,21 @@ announcerCycleDone:
             await Announce((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
         }
 
+        private static void OnUpdate(object? sender, UpdateEventArgs e)
+        {
+            try
+            {
+                if (e.Update.Type == UpdateType.ChannelPost)
+                {
+                    Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
+                }
+            }
+            catch (Exception ex)
+            {
+                Error("Error processing update: " + ex);
+            }
+        }
+
         private static async Task SendMessage(string message)
         {
             foreach (var id in ConfigManager.Config.BroadcastId)
@@ -221,6 +238,10 @@ announcerCycleDone:
                 _scheduler = new();
                 _scheduler.Announcement += OnAnnouncement;
                 _ = Task.Run(DeathAnnouncer);
+                
+                Info("Starting update receiving...");
+                _bot.OnUpdate += OnUpdate;
+                _bot.StartReceiving(new [] {UpdateType.ChannelPost}, MainCancellationTokenSource.Token);
 
                 Info($"Startup complete in {AppStopwatch.Elapsed.TotalSeconds:F2}s, main thread entering standby state...");
                 var token = MainCancellationTokenSource.Token;
