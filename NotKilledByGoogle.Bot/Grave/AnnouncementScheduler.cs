@@ -74,15 +74,19 @@ namespace NotKilledByGoogle.Bot.Grave
         /// </summary>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="options">Specifies how <see cref="AnnouncementScheduler"/> should make a schedule based on <see cref="Gravestone"/> info.</param>
-        public async Task ScheduleAsync(Gravestone gravestone, AnnouncementOptions? options = null)
+        public async Task<int> ScheduleAsync(Gravestone gravestone, AnnouncementOptions? options = null)
         {
+            var scheduled = 0;
             options ??= AnnouncementOptions.Default;
             foreach (var futureDays in options.CriticalDays)
             {
                 var estimatedFuture = gravestone.DateClose.AddDays(-futureDays);
                 if (estimatedFuture <= DateTimeOffset.Now) continue;
                 await ScheduleAsync(gravestone, estimatedFuture);
+                scheduled++;
             }
+
+            return scheduled;
         }
 
         /// <summary>

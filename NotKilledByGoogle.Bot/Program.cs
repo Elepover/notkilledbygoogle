@@ -17,7 +17,7 @@ namespace NotKilledByGoogle.Bot
 {
     internal static class Program
     {
-        private const string Version = "0.1.12a";
+        private const string Version = "0.1.13a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         private static readonly Stopwatch AppStopwatch = new();
@@ -72,8 +72,8 @@ namespace NotKilledByGoogle.Bot
                     skipped++;
                     continue;
                 }
-                await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
-                Info($"Scheduled death announcement for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
+                var scheduledAnnouncementCount = await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                Info($"Scheduled {scheduledAnnouncementCount} death announcement(s) for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
             }
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
 
