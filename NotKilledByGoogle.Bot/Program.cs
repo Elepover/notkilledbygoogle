@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.14a";
+        private const string Version = "0.1.15a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -117,7 +117,11 @@ namespace NotKilledByGoogle.Bot
                     continue;
                 }
                 var scheduledAnnouncementCount = await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
-                Info($"Scheduled {scheduledAnnouncementCount} death announcement(s) for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}, which is dying on {gravestone.DateClose:ddd, MMM dd, yyyy}.");
+                Info($"Scheduled announcements for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}:");
+                foreach (var announcementDate in _scheduler.GetAnnouncementDates(gravestone))
+                {
+                    Info($"{new string(' ', 4)} {announcementDate:R}");
+                }
             }
             
             // ready, enter next stage

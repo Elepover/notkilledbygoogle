@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace NotKilledByGoogle.Bot.Grave
     /// </summary>
     public class AnnouncementScheduler : IDisposable
     {
-        private readonly Dictionary<Gravestone, CancellationTokenSource> _scheduled = new();
+        private readonly Dictionary<Gravestone, GraveAnnouncementCollection> _scheduled = new();
         private int _scheduledCount = 0;
 
         /// <summary>
@@ -30,44 +31,54 @@ namespace NotKilledByGoogle.Bot.Grave
         /// Get the count of scheduled announcements.
         /// </summary>
         public int ScheduledCount => _scheduledCount;
-        
+
+        /// <summary>
+        /// Get scheduled announcements' designated fire-off time.
+        /// </summary>
+        /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
+        /// <exception cref="KeyNotFoundException">The <see cref="Gravestone"/> isn't registered.</exception>
+        /// <returns></returns>
+        public DateTimeOffset[] GetAnnouncementDates(Gravestone gravestone)
+            => _scheduled[gravestone].AnnouncementTasks.Select(x => x.Item1).ToArray();
+
         /// <summary>
         /// Schedule an announcement and return when the announcement task is started.
         /// </summary>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="timeout">How long should the <see cref="AnnouncementScheduler"/> wait until time is up.</param>
-        public async Task ScheduleAsync(Gravestone gravestone, TimeSpan timeout)
+        public Task ScheduleAsync(Gravestone gravestone, TimeSpan timeout)
+            => ScheduleAsync(gravestone, DateTimeOffset.Now + timeout);
+
+        /// <inheritdoc cref="ScheduleAsync(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
+        /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
+        /// <param name="future">Time in the future when the announcement should be made.</param>
+        public async Task ScheduleAsync(Gravestone gravestone, DateTimeOffset future)
         {
             // add it to tracking list if keypair doesn't exist
             if (!_scheduled.ContainsKey(gravestone))
                 _scheduled.Add(gravestone, new());
-            
+
             // prepare the task
-            var cts = _scheduled[gravestone];
+            var taskCollection = _scheduled[gravestone];
             var tcs = new TaskCompletionSource();
-            _ = Task.Run(async () =>
+            var task = Task.Run(async () =>
             {
                 try
                 {
                     Interlocked.Increment(ref _scheduledCount);
                     // ok, the task is ready, you may continue
                     tcs.SetResult();
-                    await Utils.Delay(timeout, cts.Token);
-                    Announcement?.Invoke(this, new (gravestone));
+                    await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
+                    Announcement?.Invoke(this, new(gravestone));
                 }
                 finally
                 {
                     Interlocked.Decrement(ref _scheduledCount);
                 }
             });
+            taskCollection.AnnouncementTasks.Add((future, task));
             await tcs.Task;
         }
-
-        /// <inheritdoc cref="ScheduleAsync(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
-        /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
-        /// <param name="future">Time in the future when the announcement should be made.</param>
-        public Task ScheduleAsync(Gravestone gravestone, DateTimeOffset future)
-            => ScheduleAsync(gravestone, future - DateTimeOffset.Now);
         
         /// <summary>
         /// Automatically schedule announcements based on info provided in <see cref="Gravestone"/>.
@@ -99,7 +110,7 @@ namespace NotKilledByGoogle.Bot.Grave
             if (_scheduled.ContainsKey(gravestone))
             {
                 // cancel all tasks
-                _scheduled[gravestone].Cancel();
+                _scheduled[gravestone].CancellationTokenSource.Cancel();
                 _scheduled[gravestone].Dispose();
                 // remove the pair from scheduled pool
                 _scheduled.Remove(gravestone);
@@ -117,9 +128,9 @@ namespace NotKilledByGoogle.Bot.Grave
         {
             if (disposing)
             {
-                foreach (var (_, cts) in _scheduled)
+                foreach (var (_, announcementCollection) in _scheduled)
                 {
-                    cts.Dispose();
+                    announcementCollection.Dispose();
                 }
             }
             // free native resources if there are any.
