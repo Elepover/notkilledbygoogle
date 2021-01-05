@@ -59,11 +59,10 @@ namespace NotKilledByGoogle.Tests
             
             for (int expected = expectedAnnouncements; expected >= 1; expected--)
             {
-                await scheduler.ScheduleAsync(gravestone, TimeSpan.FromMilliseconds(expected * 100));   
+                await scheduler.ScheduleAsync(gravestone, TimeSpan.FromMilliseconds(expected * 50));   
             }
             
-            // counter performance overhead to ensure better success possibility
-            await Task.Delay(TimeSpan.FromMilliseconds((expectedAnnouncements + 1) * 100));
+            await Task.Delay(TimeSpan.FromMilliseconds(expectedAnnouncements * 50));
             
             Assert.Equal(expectedAnnouncements, count);
         }

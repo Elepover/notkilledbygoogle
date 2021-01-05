@@ -291,7 +291,7 @@ announcerCycleDone:
                         await Task.Delay(Timeout.Infinite, token);
                     }
                     // ignore that TaskCanceledException: we're terminating everything
-                    catch (TaskCanceledException) {}
+                    catch (OperationCanceledException) {}
                     catch (Exception ex)
                     {
                         Error("Something happened in main thread: " + ex);

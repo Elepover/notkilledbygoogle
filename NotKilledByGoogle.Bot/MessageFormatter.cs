@@ -31,7 +31,7 @@ namespace NotKilledByGoogle.Bot
             if (left <= TimeSpan.FromDays(1)) return "tomorrow";
             var leftDays = left.TotalDays;
             double result;
-            if (Math.Abs(Math.Truncate(leftDays) - leftDays) < Double.Epsilon)
+            if (Math.Abs(Math.Truncate(leftDays) - leftDays) < double.Epsilon)
                 result = leftDays;
             else
                 result = Math.Truncate(leftDays) + 1;
