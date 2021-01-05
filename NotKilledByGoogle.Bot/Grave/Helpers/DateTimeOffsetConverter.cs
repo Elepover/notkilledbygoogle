@@ -12,7 +12,7 @@ namespace NotKilledByGoogle.Bot.Grave.Helpers
             Type typeToConvert,
             JsonSerializerOptions options) =>
             DateTimeOffset.ParseExact(Utils.ThrowIfNull(reader.GetString()),
-                "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
         public override void Write(
             Utf8JsonWriter writer,
