@@ -5,7 +5,7 @@ namespace NotKilledByGoogle.Bot
 {
     public static class ConsoleHelper
     {
-        private static string GetPrefix(string severity, string caller) => $"[{DateTimeOffset.UtcNow:G}][{severity}@{caller}] ";
+        private static string GetPrefix(string severity, string caller) => $"[{DateTimeOffset.Now:G}][{severity}@{caller}] ";
         
         public static void Info(string log, [CallerMemberName] string caller = "?")
             => Console.WriteLine(GetPrefix("INFO", caller) + log);

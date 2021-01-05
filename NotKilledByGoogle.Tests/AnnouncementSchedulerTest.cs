@@ -19,11 +19,11 @@ namespace NotKilledByGoogle.Tests
         
         private static IEnumerable<DateTimeOffsetWrapper[]> PastDueAnnouncementDates()
         {
-            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.UtcNow.AddSeconds(-1)) };
-            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.UtcNow.AddMinutes(-1)) };
-            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.UtcNow.AddHours(-1)) };
-            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.UtcNow.AddDays(-1)) };
-            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.UtcNow.AddMonths(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddSeconds(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddMinutes(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddHours(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddDays(-1)) };
+            yield return new DateTimeOffsetWrapper[] { new(DateTimeOffset.Now.AddMonths(-1)) };
         }
         
         [Fact]
@@ -35,7 +35,7 @@ namespace NotKilledByGoogle.Tests
                 x => scheduler.Announcement -= x,
                 async () =>
                 {
-                    var gravestone = new Gravestone() {DateClose = DateTimeOffset.UtcNow.AddMilliseconds(100)};
+                    var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMilliseconds(100)};
                     await scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
                     // counter the overheads of scheduling
                     await Task.Delay(250);
@@ -50,7 +50,7 @@ namespace NotKilledByGoogle.Tests
             const int expectedAnnouncements = 3;
             var count = 0;
             var scheduler = new AnnouncementScheduler();
-            var gravestone = new Gravestone() {DateClose = DateTimeOffset.UtcNow};
+            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
             scheduler.Announcement += (_, args) =>
             {
                 if (args.Gravestone == gravestone)
@@ -72,7 +72,7 @@ namespace NotKilledByGoogle.Tests
         public void Cancellation()
         {
             var scheduler = new AnnouncementScheduler();
-            var gravestone = new Gravestone() {DateClose = DateTimeOffset.UtcNow.AddMonths(1)};
+            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMonths(1)};
             scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(new []{ 1, 2, 3 }));
             
             Assert.True(scheduler.IsScheduled(gravestone));
@@ -84,7 +84,7 @@ namespace NotKilledByGoogle.Tests
         public void Now()
         {
             var scheduler = new AnnouncementScheduler();
-            var gravestone = new Gravestone() {DateClose = DateTimeOffset.UtcNow};
+            var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now};
             scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
             
             Assert.False(scheduler.IsScheduled(gravestone));
