@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Grave
@@ -12,7 +11,6 @@ namespace NotKilledByGoogle.Bot.Grave
     public class AnnouncementScheduler : IDisposable
     {
         private readonly Dictionary<Gravestone, GraveAnnouncementCollection> _scheduled = new();
-        private int _scheduledCount = 0;
 
         /// <summary>
         /// Raised when an announcement is made.
@@ -30,7 +28,18 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <summary>
         /// Get the count of scheduled announcements.
         /// </summary>
-        public int ScheduledCount => _scheduledCount;
+        public int ScheduledCount {
+            get
+            {
+                var result = 0;
+                foreach (var (_, collection) in _scheduled)
+                {
+                    result += collection.AnnouncementTasks.Count;
+                }
+
+                return result;
+            }
+        }
 
         /// <summary>
         /// Get scheduled announcements' designated fire-off time.
@@ -65,16 +74,10 @@ namespace NotKilledByGoogle.Bot.Grave
             {
                 try
                 {
-                    Interlocked.Increment(ref _scheduledCount);
-                    // ok, the task is ready, you may continue
                     tcs.SetResult();
                     await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
                     Announcement?.Invoke(this, new(gravestone));
-                }
-                finally
-                {
-                    Interlocked.Decrement(ref _scheduledCount);
-                }
+                } finally {}
             });
             taskCollection.AnnouncementTasks.Add((future, task));
             await tcs.Task;
@@ -109,8 +112,7 @@ namespace NotKilledByGoogle.Bot.Grave
         {
             if (_scheduled.ContainsKey(gravestone))
             {
-                // cancel all tasks
-                _scheduled[gravestone].CancellationTokenSource.Cancel();
+                // cancel all tasks (by disposing the CancellationTokenSource themselves)
                 _scheduled[gravestone].Dispose();
                 // remove the pair from scheduled pool
                 _scheduled.Remove(gravestone);
