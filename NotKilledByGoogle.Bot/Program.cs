@@ -63,7 +63,7 @@ namespace NotKilledByGoogle.Bot
         private static async void OnAnnouncement(object? sender, AnnouncementEventArgs e)
         {
             Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
-            await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+            await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.UtcNow < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
         }
 
         private static void OnUpdate(object? sender, UpdateEventArgs e)
@@ -111,7 +111,7 @@ namespace NotKilledByGoogle.Bot
             // make initial schedules
             foreach (var gravestone in graveyard)
             {
-                if (gravestone.DateClose <= DateTimeOffset.Now)
+                if (gravestone.DateClose <= DateTimeOffset.UtcNow)
                 {
                     skipped++;
                     continue;
@@ -213,7 +213,7 @@ announcerCycleDone:
                         string.Format(MessageFormatter.KillingByGoogle,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
-                                      MessageFormatter.FormatTimeLeft(gravestone.DateClose - DateTimeOffset.Now)));
+                                      MessageFormatter.FormatTimeLeft(gravestone.DateClose - DateTimeOffset.UtcNow)));
                     break;
                 case AnnouncementType.NewVictim:
                     await SendMessageAsync(

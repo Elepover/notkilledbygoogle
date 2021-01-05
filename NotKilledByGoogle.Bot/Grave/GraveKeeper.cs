@@ -33,7 +33,7 @@ namespace NotKilledByGoogle.Bot.Grave
                     var deserialized = await JsonSerializer.DeserializeAsync<List<Gravestone>>(await response.Content.ReadAsStreamAsync(token), Gravestone.SerializerOptions, token);
                     Gravestones = Utils.ThrowIfNull(deserialized).ToArray();
                     // set latest fetch time
-                    LatestSuccessfulFetch = DateTimeOffset.Now;
+                    LatestSuccessfulFetch = DateTimeOffset.UtcNow;
                     // notify all subscribers
                     Fetched?.Invoke(this, new FetchedEventArgs(_graveyardJsonLocation));
                 }

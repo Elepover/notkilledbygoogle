@@ -47,7 +47,7 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
         /// <param name="timeout">How long should the <see cref="AnnouncementScheduler"/> wait until time is up.</param>
         public Task ScheduleAsync(Gravestone gravestone, TimeSpan timeout)
-            => ScheduleAsync(gravestone, DateTimeOffset.Now + timeout);
+            => ScheduleAsync(gravestone, DateTimeOffset.UtcNow + timeout);
 
         /// <inheritdoc cref="ScheduleAsync(NotKilledByGoogle.Bot.Grave.Gravestone,System.TimeSpan)"/>
         /// <param name="gravestone">Corresponding <see cref="Gravestone"/>.</param>
@@ -68,7 +68,7 @@ namespace NotKilledByGoogle.Bot.Grave
                     Interlocked.Increment(ref _scheduledCount);
                     // ok, the task is ready, you may continue
                     tcs.SetResult();
-                    await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
+                    await Utils.Delay(future - DateTimeOffset.UtcNow, taskCollection.CancellationTokenSource.Token);
                     Announcement?.Invoke(this, new(gravestone));
                 }
                 finally
@@ -92,7 +92,7 @@ namespace NotKilledByGoogle.Bot.Grave
             foreach (var futureDays in options.CriticalDays)
             {
                 var estimatedFuture = gravestone.DateClose.AddDays(-futureDays);
-                if (estimatedFuture <= DateTimeOffset.Now) continue;
+                if (estimatedFuture <= DateTimeOffset.UtcNow) continue;
                 await ScheduleAsync(gravestone, estimatedFuture);
                 scheduled++;
             }
