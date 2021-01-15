@@ -8,6 +8,9 @@ namespace NotKilledByGoogle.Bot
     /// </summary>
     public class MessageFormatter
     {
+        /*  PLEASE NOTE THAT STRINGS ARE IN MarkdownV2 FORMAT AND THESE CHARACTERS SHOULD BE ESCAPED:
+         *  _, *, [, ], (, ), ~, `, >, #, +, -, =, |, {, }, ., !
+         */
         // {0}: app/service/hardware, {1}: product name, {2}: time left (in 2 days, tomorrow, etc)
         public const string KillingByGoogle = "🔪 {0}: *{1}* is going to be killed by Google `{2}`.";
         // {0}: app/service/hardware, {1}: product name, {2}: description of this product
@@ -15,7 +18,7 @@ namespace NotKilledByGoogle.Bot
         // {0}: app/service/hardware, {1}: product name, {2}: description of this product
         public const string NewProductMurdered = "⚠️ yet another {0} is going to be killed by Google: *{1}*\n\n_{2}_";
         // {0}: app/service/hardware, {1}: product name, {2}: description of this product
-        public const string ProductSaved = "🎉 a {0} was surprisingly saved from Google: *{1}*\n\n_{2}_";
+        public const string ProductExempted = "🎉 a {0} was surprisingly exempted by Google: *{1}*\n\n_{2}_";
         
         public static string DeceasedTypeName(DeceasedType deceasedType) => deceasedType switch
         {

@@ -5,6 +5,6 @@ namespace NotKilledByGoogle.Bot
         Killing,
         Killed,
         NewVictim,
-        ProductSaved
+        ProductExempted
     }
 }

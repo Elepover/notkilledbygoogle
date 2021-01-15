@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.15a";
+        private const string Version = "0.1.16a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -63,7 +63,14 @@ namespace NotKilledByGoogle.Bot
         private static async void OnAnnouncement(object? sender, AnnouncementEventArgs e)
         {
             Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
-            await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+            try
+            {
+                await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+            }
+            catch (Exception ex)
+            {
+                Error("Unable to make announcement: " + ex);   
+            }
         }
 
         private static void OnUpdate(object? sender, UpdateEventArgs e)
@@ -158,7 +165,7 @@ namespace NotKilledByGoogle.Bot
                         {
                             _scheduler.Cancel(gravestone, true);
                             Info($"HOLY SHIT a project was SAVED by Google! It was {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}");
-                            await AnnounceAsync(AnnouncementType.ProductSaved, gravestone);
+                            await AnnounceAsync(AnnouncementType.ProductExempted, gravestone);
                         }
                     }
                     
@@ -187,7 +194,7 @@ announcerCycleDone:
             foreach (var id in ConfigManager.Config.BroadcastId)
             {
                 Info($"Sending message to chat {id}...");
-                await _bot.SendTextMessageAsync(new(id), message, ParseMode.MarkdownV2, true);
+                await _bot.SendTextMessageAsync(new(id), Utils.EscapeIllegalMarkdownV2Chars(message), ParseMode.MarkdownV2, true);
             }
         }
 
@@ -223,9 +230,9 @@ announcerCycleDone:
                                       gravestone.Description
                         ));
                     break;
-                case AnnouncementType.ProductSaved:
+                case AnnouncementType.ProductExempted:
                     await SendMessageAsync(
-                        string.Format(MessageFormatter.ProductSaved,
+                        string.Format(MessageFormatter.ProductExempted,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
                                       gravestone.Description

@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +8,14 @@ namespace NotKilledByGoogle.Bot
 {
     public static class Utils
     {
+        private static readonly char[] IllegalMarkdownV2Chars =
+        {
+            '_', '*', '[', ']', '(',
+            ')', '~', '`', '>', '#',
+            '+', '-', '=', '|', '{',
+            '}', '.', '!'
+        };
+        
         /// <summary>
         /// Throw an exception if the passed value is <see langword="null"/>.
         /// </summary>
@@ -42,5 +52,42 @@ namespace NotKilledByGoogle.Bot
         /// <inheritdoc cref="Delay(long,System.Threading.CancellationToken)"/>
         public static Task Delay(TimeSpan delay, CancellationToken cancellationToken = default)
             => Delay(Convert.ToInt64(delay.TotalMilliseconds), cancellationToken);
+
+        public static string EscapeIllegalMarkdownV2Chars(string str)
+        {
+            var escapeMode = false;
+            var sb = new StringBuilder();
+
+            foreach (var ch in str)
+            {
+                // in escape mode, just append what it wanted to escape.
+                // (it's already escaped)
+                if (escapeMode)
+                {
+                    escapeMode = false;
+                    goto NextChar;
+                }
+                
+                // enter escape mode on encountering backslash.
+                // (it's already escaped so don't escape next character)
+                if (ch == '\\')
+                {
+                    escapeMode = true;
+                    goto NextChar;
+                }
+
+                // not in escape mode, check if it needs to be escaped.
+                if (IllegalMarkdownV2Chars.Contains(ch))
+                {
+                    // escape it
+                    sb.Append('\\');
+                }
+                
+                NextChar:
+                sb.Append(ch);
+            }
+
+            return sb.ToString();
+        }
     }
 }
