@@ -8,6 +8,13 @@ namespace NotKilledByGoogle.Bot
     /// </summary>
     public class MessageFormatter
     {
+        public static readonly string[] MonthNames =
+        {
+            "January", "February", "March",
+            "April", "May", "June",
+            "July", "August", "September",
+            "October", "November", "December"
+        };
         /*  PLEASE NOTE THAT STRINGS ARE IN MarkdownV2 FORMAT AND THESE CHARACTERS SHOULD BE ESCAPED:
          *  _, *, [, ], (, ), ~, `, >, #, +, -, =, |, {, }, ., !
          *
@@ -22,6 +29,8 @@ namespace NotKilledByGoogle.Bot
         public const string NewProductMurdered = "⚠️ Yet another {0} is going to be killed by Google: *{1}*\n\n_{2}_";
         // {0}: app/service/hardware, {1}: product name, {2}: description of this product
         public const string ProductExempted = "🎉 A {0} was surprisingly exempted by Google: *{1}*\n\n_{2}_";
+        // {0}: month, {1} products left to be killed
+        public const string NewMonth = "🗓 Welcome to {0}, there are still {1} products on their way to the heaven.";
         
         public static string DeceasedTypeName(DeceasedType deceasedType) => deceasedType switch
         {

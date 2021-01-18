@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -49,6 +50,13 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <returns></returns>
         public DateTimeOffset[] GetAnnouncementDates(Gravestone gravestone)
             => _scheduled[gravestone].AnnouncementTasks.Select(x => x.Item1).ToArray();
+
+        /// <summary>
+        /// Get scheduled gravestones.
+        /// </summary>
+        /// <returns></returns>
+        public ImmutableList<Gravestone> GetGravestones()
+            => _scheduled.Keys.ToImmutableList();
 
         /// <summary>
         /// Schedule an announcement and return when the announcement task is started.

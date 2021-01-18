@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.17a";
+        private const string Version = "0.1.18a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -96,7 +96,9 @@ namespace NotKilledByGoogle.Bot
         /// <returns></returns>
         private static async Task DeathAnnouncer()
         {
-            // STAGE 1: SETUP
+            /* SETUP STAGE
+             * Fetch initial graveyard data before proceeding to loop.
+             */
             
             // wait until GraveKeeper tells it that data is ready
             var tcs = new TaskCompletionSource();
@@ -134,7 +136,10 @@ namespace NotKilledByGoogle.Bot
             // ready, enter next stage
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
 
-            // STAGE 2: UPDATE LOOP
+            /* LOOP STAGE
+             * Continuously fetch new graveyard data and make
+             * corrections for newly added stuff or removed (unlikely)
+             */
             var token = MainCancellationTokenSource.Token;
             while (!token.IsCancellationRequested)
             {
@@ -174,10 +179,42 @@ announcerCycleDone:
                     graveyard = newGraveyard;
                     Info($"Graveyard updated, {_scheduler.ScheduledCount} announcements pending.");
                 }
-                catch (TaskCanceledException) {}
+                catch (OperationCanceledException) {}
                 catch (Exception ex)
                 {
                     Warning("Death announcer encountered something wrong: " + ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Monthly update's broadcasting logic.
+        /// </summary>
+        /// <returns></returns>
+        private static async Task MonthlyUpdate()
+        {
+            // cache the token and directly proceed to loop
+            var token = MainCancellationTokenSource.Token;
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    // calculate next month's 1st day
+                    var now = DateTimeOffset.UtcNow;
+                    var future = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero)
+                        .AddMonths(1);
+                    // delay until that exact day
+                    await Utils.Delay(future - now, token);
+                    // make monthly update announcement
+                    await SendMessageAsync(
+                        string.Format(MessageFormatter.NewMonth,
+                                      MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
+                                      _scheduler.GetGravestones().Count));
+                }
+                catch (OperationCanceledException) {}
+                catch (Exception ex)
+                {
+                    Warning("Monthly update unsuccessful: " + ex);
                 }
             }
         }
@@ -251,6 +288,10 @@ announcerCycleDone:
             Info("Starting ᴺᴼᵀKilled by Google bot, version " + Version);
             try
             {
+                /* STAGE 1
+                 * - Hook Ctrl-C event handler
+                 * - Load configurations
+                 */
                 Info("Arming event handler...");
                 Console.CancelKeyPress += OnKeyboardInterrupt;
                 
@@ -267,6 +308,15 @@ announcerCycleDone:
                 _ = Utils.ThrowIfNull(ConfigManager.Config);
                 Info("Configurations loaded.");
                 
+                /* STAGE 2
+                 * - Test Bot API connectivity
+                 * - Prepare graveyard fetcher / updater
+                 *     Purpose: update graveyard cache periodically
+                 * - Prepare death announcer
+                 *     Purpose: make initial schedule and
+                 *              check for changes periodically
+                 * - Start message receiving
+                 */
                 Info("Preparing Telegram bot...");
                 _bot = new(ConfigManager.Config.ApiKey);
                 if (!Debugger.IsAttached)
@@ -288,7 +338,11 @@ announcerCycleDone:
                 Info("Starting update receiving...");
                 _bot.OnUpdate += OnUpdate;
                 _bot.StartReceiving(new [] {UpdateType.ChannelPost}, MainCancellationTokenSource.Token);
-
+                
+                /* STAGE 3
+                 * All up & running, make the Main() task go into standby state
+                 * and keep the main thread alive.
+                 */
                 Info($"Startup complete in {AppStopwatch.Elapsed.TotalSeconds:F2}s, main thread entering standby state...");
                 var token = MainCancellationTokenSource.Token;
                 while (!token.IsCancellationRequested)

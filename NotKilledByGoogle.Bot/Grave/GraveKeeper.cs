@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Grave
 {
-    public class GraveKeeper : IDisposable
+    public sealed class GraveKeeper : IDisposable
     {
         private readonly string _graveyardJsonLocation;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -96,7 +96,7 @@ namespace NotKilledByGoogle.Bot.Grave
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing) 
             {
