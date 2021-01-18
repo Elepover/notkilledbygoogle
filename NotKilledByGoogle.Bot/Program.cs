@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.18a";
+        private const string Version = "0.1.19a";
         private const int DeathAnnouncerInterval = 300000;
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -65,7 +65,7 @@ namespace NotKilledByGoogle.Bot
             Info($"Incoming announcement for {e.Gravestone.DeceasedType.ToString().ToLowerInvariant()} {e.Gravestone.Name}.");
             try
             {
-                await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.Now < TimeSpan.FromDays(1)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
+                await AnnounceAsync((e.Gravestone.DateClose - DateTimeOffset.UtcNow < TimeSpan.FromHours(12)) ? AnnouncementType.Killed : AnnouncementType.Killing, e.Gravestone);
             }
             catch (Exception ex)
             {
@@ -324,8 +324,8 @@ announcerCycleDone:
                 else
                     Info("Skipped: in debug mode.");
                 
-                Info("Preparing graveyard keeper...");
-                _keeper = new (ConfigManager.Config.GraveyardJsonLocation);
+                Info("Preparing graveyard keeper...");                           // update per 15 minutes
+                _keeper = new (ConfigManager.Config.GraveyardJsonLocation) { UpdateInterval = 900000 };
                 _keeper.FetchError += OnFetchError;
                 _keeper.Fetched += OnFetched;
                 // NOT starting keeper just yet, let the announcer do it.
