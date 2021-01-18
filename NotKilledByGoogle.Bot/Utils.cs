@@ -10,8 +10,9 @@ namespace NotKilledByGoogle.Bot
     {
         private static readonly char[] IllegalMarkdownV2Chars =
         {
-            '_', '*', '[', ']', '(',
-            ')', '~', '`', '>', '#',
+            // '*', '`', '_', '~', '[', ']', '(', ')' are ignored Markdown stuff because caller
+            // should escape them manually for clarity
+            '>', '#',
             '+', '-', '=', '|', '{',
             '}', '.', '!'
         };
@@ -53,6 +54,12 @@ namespace NotKilledByGoogle.Bot
         public static Task Delay(TimeSpan delay, CancellationToken cancellationToken = default)
             => Delay(Convert.ToInt64(delay.TotalMilliseconds), cancellationToken);
 
+        /// <summary>
+        /// Escape illegal characters. <br />
+        /// <code>'*', '`', '_', '~', '[', ']', '(', ')'</code> are ignored Markdown stuff. Escape them manually.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static string EscapeIllegalMarkdownV2Chars(string str)
         {
             var escapeMode = false;

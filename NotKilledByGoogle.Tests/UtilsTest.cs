@@ -56,8 +56,8 @@ namespace NotKilledByGoogle.Tests
             "In just a moment, the word 'blah!' will be repeated over and over again. If at some point you hear a number rather than the word 'blah!', ignore it, it is not important.",
             "In just a moment, the word 'blah\\!' will be repeated over and over again\\. If at some point you hear a number rather than the word 'blah\\!', ignore it, it is not important\\.")]
         [InlineData(
-            "Today's Security_Code* is: [5,33,41,18].",
-            "Today's Security\\_Code\\* is: \\[5,33,41,18\\]\\.")]
+            "Today's Security Code is: [5,33,41,18].",
+            "Today's Security Code is: [5,33,41,18]\\.")]
         public void TestEscaping(string original, string expected)
             => Assert.Equal(expected, Utils.EscapeIllegalMarkdownV2Chars(original));
 
