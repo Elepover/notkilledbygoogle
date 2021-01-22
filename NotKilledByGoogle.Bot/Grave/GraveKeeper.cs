@@ -42,7 +42,7 @@ namespace NotKilledByGoogle.Bot.Grave
                     FetchError?.Invoke(this, new FetchErrorEventArgs(ex, LatestSuccessfulFetch ?? DateTimeOffset.UnixEpoch, _graveyardJsonLocation));
                 }
 
-                try { await Task.Delay(UpdateInterval, token); } finally { } 
+                await Task.Delay(UpdateInterval, token);
             }
             _busy = false;
         }
@@ -92,18 +92,8 @@ namespace NotKilledByGoogle.Bot.Grave
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (disposing) 
-            {
-                _client.Dispose();
-                _cancellationTokenSource.Dispose();
-            }
-            // free native resources if there are any.
+            _client.Dispose();
+            _cancellationTokenSource.Dispose();
         }
     }
 }

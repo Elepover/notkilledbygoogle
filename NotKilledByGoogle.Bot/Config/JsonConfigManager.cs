@@ -10,6 +10,7 @@ namespace NotKilledByGoogle.Bot.Config
 {
     public class JsonConfigManager<T> : IConfigManager<T> where T : class, new()
     {
+        // ReSharper disable once StaticMemberInGenericType
         private static readonly JsonSerializerOptions DefaultSerializerOptions = new()
         {
             WriteIndented = true

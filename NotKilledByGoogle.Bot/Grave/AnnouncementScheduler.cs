@@ -80,12 +80,9 @@ namespace NotKilledByGoogle.Bot.Grave
             var tcs = new TaskCompletionSource();
             var task = Task.Run(async () =>
             {
-                try
-                {
-                    tcs.SetResult();
-                    await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
-                    Announcement?.Invoke(this, new(gravestone));
-                } finally {}
+                tcs.SetResult();
+                await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
+                Announcement?.Invoke(this, new(gravestone));
             });
             taskCollection.AnnouncementTasks.Add((future, task));
             await tcs.Task;

@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.20a";
+        private const string Version = "0.1.21a";
         private const int DeathAnnouncerInterval = 900000; /* 15 minutes */
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -49,6 +49,8 @@ namespace NotKilledByGoogle.Bot
             Info("Attempting to save configurations...");
             await ConfigManager.SaveConfigAsync();
             Info("Cancelling running tasks...");
+            // yes, it might be null
+            // ReSharper disable once ConstantConditionalAccessQualifier
             _keeper?.Stop();
             // no need to stop bot receiving: we started receiving with CancellationToken
             MainCancellationTokenSource.Cancel();
@@ -125,7 +127,7 @@ namespace NotKilledByGoogle.Bot
                     skipped++;
                     continue;
                 }
-                var scheduledAnnouncementCount = await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
+                await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                 Info($"Scheduled announcements for {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}:");
                 foreach (var announcementDate in _scheduler.GetAnnouncementDates(gravestone))
                 {
@@ -203,9 +205,11 @@ announcerCycleDone:
                     var now = DateTimeOffset.UtcNow;
                     var future = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero)
                         .AddMonths(1);
+                    Info($"Scheduling next monthly announcement at: {future:R}.");
                     // delay until that exact day
                     await Utils.Delay(future - now, token);
                     // make monthly update announcement
+                    Info("Making monthly announcement.");
                     await SendMessageAsync(
                         string.Format(MessageFormatter.NewMonth,
                                       MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
@@ -315,6 +319,7 @@ announcerCycleDone:
                  * - Prepare death announcer
                  *     Purpose: make initial schedule and
                  *              check for changes periodically
+                 * - Start monthly update announcer
                  * - Start message receiving
                  */
                 Info("Preparing Telegram bot...");
@@ -335,6 +340,9 @@ announcerCycleDone:
                 _scheduler = new();
                 _scheduler.Announcement += OnAnnouncement;
                 _ = Task.Run(DeathAnnouncer);
+                
+                Info("Preparing monthly update announcer...");
+                _ = Task.Run(MonthlyUpdate);
                 
                 Info("Starting update receiving...");
                 _bot.OnUpdate += OnUpdate;
