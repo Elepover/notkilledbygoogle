@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.21a";
+        private const string Version = "0.1.22a";
         private const int DeathAnnouncerInterval = 900000; /* 15 minutes */
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -159,6 +159,10 @@ namespace NotKilledByGoogle.Bot
                         {
                             await _scheduler.ScheduleAsync(gravestone, new AnnouncementOptions(AnnounceBeforeDays));
                             Info($"New product joined the Being Alive Club: {gravestone.DeceasedType.ToString().ToLowerInvariant()} {gravestone.Name}.");
+                            foreach (var announcementDate in _scheduler.GetAnnouncementDates(gravestone))
+                            {
+                                Info($"{new string(' ', 4)} {announcementDate:R}");
+                            }
                             await AnnounceAsync(AnnouncementType.NewVictim, gravestone);
                         }
                         goto announcerCycleDone;
@@ -268,6 +272,7 @@ announcerCycleDone:
                         string.Format(MessageFormatter.NewProductMurdered,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
                                       gravestone.Name,
+                                      gravestone.DateClose.ToString("R"),
                                       gravestone.Description
                         ));
                     break;
@@ -275,6 +280,7 @@ announcerCycleDone:
                     await SendMessageAsync(
                         string.Format(MessageFormatter.ProductExempted,
                                       MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
+                                      (gravestone.DateClose - DateTimeOffset.UtcNow).TotalDays.ToString("F1"),
                                       gravestone.Name,
                                       gravestone.Description
                         ));

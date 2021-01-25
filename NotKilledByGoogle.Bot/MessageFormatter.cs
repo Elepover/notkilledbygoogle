@@ -25,10 +25,10 @@ namespace NotKilledByGoogle.Bot
         public const string KillingByGoogle = "🔪 The {0}: *{1}* is going to be killed by Google `{2}`.";
         // {0}: app/service/hardware, {1}: product name, {2}: description of this product
         public const string KilledByGoogle = "⚰️ The {0}: *{1}* is now officially killed by Google.\n\n_{2}_";
-        // {0}: app/service/hardware, {1}: product name, {2}: description of this product
-        public const string NewProductMurdered = "⚠️ Yet another {0} is going to be killed by Google: *{1}*\n\n_{2}_";
-        // {0}: app/service/hardware, {1}: product name, {2}: description of this product
-        public const string ProductExempted = "🎉 A {0} was surprisingly exempted by Google: *{1}*\n\n_{2}_";
+        // {0}: app/service/hardware, {1}: product name, {2}: death date, {3}: description of this product
+        public const string NewProductMurdered = "⚠️ Yet another {0} is going to be killed by Google: *{1}*\n\n*Would be dead on:* {2}\n\n_{3}_";
+        // {0}: app/service/hardware, {1}: days before death, {2}: product name, {3}: description of this product
+        public const string ProductExempted = "🎉 A {0} was surprisingly exempted by Google {1} days before its death: *{2}*\n\n_{3}_";
         // {0}: month, {1} products left to be killed
         public const string NewMonth = "🗓 Welcome to {0}, there are still {1} products on their way to the heaven.";
         
