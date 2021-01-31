@@ -5,24 +5,16 @@ using System.Threading.Tasks;
 
 namespace NotKilledByGoogle.Bot.Grave
 {
-    public class GraveAnnouncementCollection : IDisposable
+    public sealed class GraveAnnouncementCollection : IDisposable
     {
-        public CancellationTokenSource CancellationTokenSource { get; } = new();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+        public CancellationToken GetCancellationToken() => _cancellationTokenSource.Token;
         public List<(DateTimeOffset, Task)> AnnouncementTasks { get; } = new();
-        
+
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                CancellationTokenSource.Dispose();
-            }
-            // free native resources if there are any.
+            _cancellationTokenSource.Dispose();
         }
     }
 }

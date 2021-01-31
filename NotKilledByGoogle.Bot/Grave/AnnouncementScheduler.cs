@@ -29,18 +29,8 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <summary>
         /// Get the count of scheduled announcements.
         /// </summary>
-        public int ScheduledCount {
-            get
-            {
-                var result = 0;
-                foreach (var (_, collection) in _scheduled)
-                {
-                    result += collection.AnnouncementTasks.Count;
-                }
-
-                return result;
-            }
-        }
+        public int ScheduledCount
+            => _scheduled.Sum(pairs => pairs.Value.AnnouncementTasks.Count);
 
         /// <summary>
         /// Get scheduled announcements' designated fire-off time.
@@ -80,8 +70,10 @@ namespace NotKilledByGoogle.Bot.Grave
             var tcs = new TaskCompletionSource();
             var task = Task.Run(async () =>
             {
+                var token = taskCollection.GetCancellationToken();
                 tcs.SetResult();
-                await Utils.Delay(future - DateTimeOffset.Now, taskCollection.CancellationTokenSource.Token);
+                
+                await Utils.Delay(future - DateTimeOffset.Now, token);
                 Announcement?.Invoke(this, new(gravestone));
             });
             taskCollection.AnnouncementTasks.Add((future, task));
@@ -125,6 +117,9 @@ namespace NotKilledByGoogle.Bot.Grave
             else if (!force) throw new InvalidOperationException("The gravestone isn't registered yet!");
         }
 
+        /// <summary>
+        /// Dispose all resources used by this <see cref="AnnouncementScheduler"/>.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);

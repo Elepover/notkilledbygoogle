@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace NotKilledByGoogle.Bot.Grave
 {
     /// <summary>
@@ -5,7 +7,7 @@ namespace NotKilledByGoogle.Bot.Grave
     /// </summary>
     public class AnnouncementOptions
     {
-        public AnnouncementOptions(int[] criticalDays)
+        public AnnouncementOptions(IEnumerable<int> criticalDays)
         {
             CriticalDays = criticalDays;
         }
@@ -19,6 +21,6 @@ namespace NotKilledByGoogle.Bot.Grave
         /// <summary>
         /// Determines when should the <see cref="AnnouncementScheduler"/> make announcements.
         /// </summary>
-        public int[] CriticalDays { get; }
+        public IEnumerable<int> CriticalDays { get; }
     }
 }

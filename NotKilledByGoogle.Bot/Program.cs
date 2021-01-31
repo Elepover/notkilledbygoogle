@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.22a";
+        private const string Version = "0.1.23a";
         private const int DeathAnnouncerInterval = 900000; /* 15 minutes */
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -180,7 +180,7 @@ namespace NotKilledByGoogle.Bot
                         }
                     }
                     
-announcerCycleDone:
+                    announcerCycleDone:
                     // finalize: update the cached graveyard
                     graveyard = newGraveyard;
                     Info($"Graveyard updated, {_scheduler.ScheduledCount} announcements pending.");
@@ -251,43 +251,17 @@ announcerCycleDone:
         /// <returns></returns>
         private static async Task AnnounceAsync(AnnouncementType type, Gravestone gravestone)
         {
-            switch (type)
+            try
             {
-                case AnnouncementType.Killed:
-                    await SendMessageAsync(
-                        string.Format(MessageFormatter.KilledByGoogle,
-                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
-                                      gravestone.Name,
-                                      gravestone.Description));
-                    break;
-                case AnnouncementType.Killing:
-                    await SendMessageAsync(
-                        string.Format(MessageFormatter.KillingByGoogle,
-                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
-                                      gravestone.Name,
-                                      MessageFormatter.FormatTimeLeft(gravestone.DateClose - DateTimeOffset.Now)));
-                    break;
-                case AnnouncementType.NewVictim:
-                    await SendMessageAsync(
-                        string.Format(MessageFormatter.NewProductMurdered,
-                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
-                                      gravestone.Name,
-                                      gravestone.DateClose.ToString("R"),
-                                      gravestone.Description
-                        ));
-                    break;
-                case AnnouncementType.ProductExempted:
-                    await SendMessageAsync(
-                        string.Format(MessageFormatter.ProductExempted,
-                                      MessageFormatter.DeceasedTypeName(gravestone.DeceasedType),
-                                      (gravestone.DateClose - DateTimeOffset.UtcNow).TotalDays.ToString("F1"),
-                                      gravestone.Name,
-                                      gravestone.Description
-                        ));
-                    break;
-                default:
-                    Warning($"Unknown announcement type passed to bot: {type}, gravestone name: {gravestone.Name}, ditched.");
-                    break;
+                await SendMessageAsync(MessageFormatter.FormatMessage(type, gravestone));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                Warning($"Unknown announcement type passed to bot: {type}, gravestone name: {gravestone.Name}, ditched.");
+            }
+            catch (Exception ex)
+            {
+                Warning($"Announcement for {gravestone.Name} failed: " + ex);
             }
         }
         #endregion
