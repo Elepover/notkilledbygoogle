@@ -18,7 +18,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.23a";
+        private const string Version = "0.1.24a";
         private const int DeathAnnouncerInterval = 900000; /* 15 minutes */
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
@@ -79,9 +79,14 @@ namespace NotKilledByGoogle.Bot
         {
             try
             {
-                if (e.Update.Type == UpdateType.ChannelPost)
+                switch (e.Update.Type)
                 {
-                    Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
+                    case UpdateType.ChannelPost:
+                        Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
+                        break;
+                    case UpdateType.InlineQuery:
+                        Info($"Received inline query from "); // TODO: add parser
+                        break;
                 }
             }
             catch (Exception ex)
@@ -214,10 +219,26 @@ namespace NotKilledByGoogle.Bot
                     await Utils.Delay(future - now, token);
                     // make monthly update announcement
                     Info("Making monthly announcement.");
-                    await SendMessageAsync(
-                        string.Format(MessageFormatter.NewMonth,
-                                      MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
-                                      _scheduler.GetGravestones().Count));
+                    var count = _scheduler.GetGravestones().Count;
+                    if (count != 0)
+                    {
+                        var nextOneToBeKilled = _keeper.Gravestones.Aggregate((knownMin, x)
+                            => x.DateClose < knownMin.DateClose ? x : knownMin);
+                        await SendMessageAsync(
+                            string.Format(MessageFormatter.NewMonthWithProductsToBeKilled, 
+                                MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
+                                count,
+                                MessageFormatter.DeceasedTypeName(nextOneToBeKilled.DeceasedType),
+                                nextOneToBeKilled.Name,
+                                nextOneToBeKilled.DateClose.ToString("D"))
+                            );
+                    }
+                    else
+                    {
+                        await SendMessageAsync(
+                            string.Format(MessageFormatter.NewMonthButNoProductsGonnaBeKilled, 
+                                MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1]));
+                    }
                 }
                 catch (OperationCanceledException) {}
                 catch (Exception ex)
