@@ -18,17 +18,16 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.24a";
-        private const int DeathAnnouncerInterval = 900000; /* 15 minutes */
+        private const string Version = "0.1.25a";
+        private const int DeathAnnouncerInterval = 900000; // 15 minutes
+        private static readonly string ConfigPath =
+            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
         private static readonly int[] AnnounceBeforeDays = { 0, 1, 2, 3, 7, 30, 90, 180 };
         #endregion
 
         #region Runtime "global" variables
         private static readonly Stopwatch AppStopwatch = new();
-        private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>()
-        {
-            FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json")
-        };
+        private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>() {FilePath = ConfigPath};
         private static readonly CancellationTokenSource MainCancellationTokenSource = new();
 
         private static GraveKeeper _keeper = null!;
@@ -202,7 +201,7 @@ namespace NotKilledByGoogle.Bot
         /// Monthly update's broadcasting logic.
         /// </summary>
         /// <returns></returns>
-        private static async Task MonthlyUpdate()
+        private static async Task MonthlyUpdater()
         {
             // cache the token and directly proceed to loop
             var token = MainCancellationTokenSource.Token;
@@ -224,7 +223,7 @@ namespace NotKilledByGoogle.Bot
                     {
                         var nextOneToBeKilled = _keeper.Gravestones.Aggregate((knownMin, x)
                             => x.DateClose < knownMin.DateClose ? x : knownMin);
-                        await SendMessageAsync(
+                        await BroadcastMessageAsync(
                             string.Format(MessageFormatter.NewMonthWithProductsToBeKilled, 
                                 MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
                                 count,
@@ -235,7 +234,7 @@ namespace NotKilledByGoogle.Bot
                     }
                     else
                     {
-                        await SendMessageAsync(
+                        await BroadcastMessageAsync(
                             string.Format(MessageFormatter.NewMonthButNoProductsGonnaBeKilled, 
                                 MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1]));
                     }
@@ -255,7 +254,7 @@ namespace NotKilledByGoogle.Bot
         /// </summary>
         /// <param name="message">Message body, encoded with <see cref="ParseMode.MarkdownV2"/>.</param>
         /// <returns></returns>
-        private static async Task SendMessageAsync(string message)
+        private static async Task BroadcastMessageAsync(string message)
         {
             foreach (var id in ConfigManager.Config.BroadcastId)
             {
@@ -274,7 +273,7 @@ namespace NotKilledByGoogle.Bot
         {
             try
             {
-                await SendMessageAsync(MessageFormatter.FormatMessage(type, gravestone));
+                await BroadcastMessageAsync(MessageFormatter.FormatMessage(type, gravestone));
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -343,7 +342,7 @@ namespace NotKilledByGoogle.Bot
                 _ = Task.Run(DeathAnnouncer);
                 
                 Info("Preparing monthly update announcer...");
-                _ = Task.Run(MonthlyUpdate);
+                _ = Task.Run(MonthlyUpdater);
                 
                 Info("Starting update receiving...");
                 _bot.OnUpdate += OnUpdate;
