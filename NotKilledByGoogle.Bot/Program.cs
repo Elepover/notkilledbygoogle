@@ -298,7 +298,7 @@ namespace NotKilledByGoogle.Bot
                  */
                 Info("Arming event handler...");
                 Console.CancelKeyPress += OnKeyboardInterrupt;
-                
+
                 Info("Loading configurations from: " + ConfigManager.FilePath);
                 if (!await ConfigManager.ValidateConfigAsync())
                 {
@@ -308,10 +308,11 @@ namespace NotKilledByGoogle.Bot
                     Warning("You need to modify configurations before you can get the bot up & running.");
                     Environment.Exit(1);
                 }
+
                 await ConfigManager.LoadConfigAsync();
                 _ = Utils.ThrowIfNull(ConfigManager.Config);
                 Info("Configurations loaded.");
-                
+
                 /* STAGE 2
                  * - Test Bot API connectivity
                  * - Prepare graveyard fetcher / updater
@@ -328,26 +329,26 @@ namespace NotKilledByGoogle.Bot
                     _bot.TestApiAsync().Wait(MainCancellationTokenSource.Token);
                 else
                     Info("Skipped: in debug mode.");
-                
+
                 Info("Preparing graveyard keeper...");
                 // keep in sync with the pace of Death Announcer
-                _keeper = new (ConfigManager.Config.GraveyardJsonLocation) { UpdateInterval = DeathAnnouncerInterval };
+                _keeper = new(ConfigManager.Config.GraveyardJsonLocation) {UpdateInterval = DeathAnnouncerInterval};
                 _keeper.FetchError += OnFetchError;
                 _keeper.Fetched += OnFetched;
                 // NOT starting keeper just yet, let the announcer do it.
-                
+
                 Info("Preparing death announcer...");
                 _scheduler = new();
                 _scheduler.Announcement += OnAnnouncement;
                 _ = Task.Run(DeathAnnouncer);
-                
+
                 Info("Preparing monthly update announcer...");
                 _ = Task.Run(MonthlyUpdater);
-                
+
                 Info("Starting update receiving...");
                 _bot.OnUpdate += OnUpdate;
-                _bot.StartReceiving(new [] {UpdateType.ChannelPost}, MainCancellationTokenSource.Token);
-                
+                _bot.StartReceiving(new[] {UpdateType.ChannelPost}, MainCancellationTokenSource.Token);
+
                 /* STAGE 3
                  * All up & running, make the Main() task go into standby state
                  * and keep the main thread alive.
@@ -369,6 +370,10 @@ namespace NotKilledByGoogle.Bot
                 }
 
                 Environment.Exit(0);
+            }
+            catch (OperationCanceledException)
+            {
+                Info($"Cancelling startup after {AppStopwatch.Elapsed:c}.");
             }
             catch (Exception ex)
             {
