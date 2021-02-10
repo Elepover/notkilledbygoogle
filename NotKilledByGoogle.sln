@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotKilledByGoogle.Bot", "No
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotKilledByGoogle.Tests", "NotKilledByGoogle.Tests\NotKilledByGoogle.Tests.csproj", "{C5DFC7E8-15B9-4CAD-AB3F-59908772CC7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleRouting.Routing", "SimpleRouting\SimpleRouting.Routing\SimpleRouting.Routing.csproj", "{B7E14F4E-B4A0-46CC-B467-4CBFFB561511}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{C5DFC7E8-15B9-4CAD-AB3F-59908772CC7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5DFC7E8-15B9-4CAD-AB3F-59908772CC7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5DFC7E8-15B9-4CAD-AB3F-59908772CC7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7E14F4E-B4A0-46CC-B467-4CBFFB561511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7E14F4E-B4A0-46CC-B467-4CBFFB561511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7E14F4E-B4A0-46CC-B467-4CBFFB561511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7E14F4E-B4A0-46CC-B467-4CBFFB561511}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
