@@ -10,19 +10,24 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
         public static InlineQueryResultArticle GetArticleResult(Gravestone gravestone)
             => new(
                 $"{gravestone.DateClose:d}-{gravestone.Name}",
-                gravestone.Name,
+                $"{gravestone.Name} ({(gravestone.DateClose < DateTimeOffset.UtcNow ? "dead" : "dying")} on {gravestone.DateClose:d})",
                 new InputTextMessageContent(GetMessageText(gravestone))
                 {
-                    ParseMode = ParseMode.MarkdownV2,
+                    ParseMode = ParseMode.Html,
                     DisableWebPagePreview = true
                 });
 
+        public static bool IsDead(Gravestone gravestone)
+            => gravestone.DateClose < DateTimeOffset.UtcNow;
+
         public static string GetMessageText(Gravestone gravestone)
-            => Utils.EscapeIllegalMarkdownV2Chars(
-                $"*{gravestone.Name}*\n\n" +
-                $"📱 *Type*: {MessageFormatter.DeceasedTypeName(gravestone.DeceasedType)}\n" +
-                $"⏱ *Status*: {(gravestone.DateClose < DateTimeOffset.UtcNow ? "*dead*" : "dying")} on {gravestone.DateClose:D}\n" +
-                $"📝 *History*: {gravestone.Description}\n\n" +
-                $"📰 *Reports*: [link]({gravestone.ReferenceLink})");
+            => $"<b>{gravestone.Name}</b>\n\n" + 
+               $"📱 <b>Type</b>: {MessageFormatter.DeceasedTypeName(gravestone.DeceasedType)}\n" +
+               $"🚀 <b>Launched on</b>: {gravestone.DateOpen:ddd MM dd, yyyy}\n" +
+               $"⏱ <b>Status</b>: {(IsDead(gravestone) ? "<b>dead</b>" : "dying")} on {gravestone.DateClose:ddd MMM dd, yyyy}\n" +
+               $"🗓 <b>Days {(IsDead(gravestone) ? "since" : "left")}</b>: {Math.Abs((DateTimeOffset.UtcNow - gravestone.DateClose).TotalDays):F1}\n" +
+               $"⌛️ <b>Lifespan</b>: {Utils.Age(gravestone.DateClose - gravestone.DateOpen)}\n" +
+               $"📝 <b>History</b>: {gravestone.Description}\n\n" +
+               $"📰 <b>Reports</b>: <a href=\"{gravestone.ReferenceLink}\">link</a>";
     }
 }

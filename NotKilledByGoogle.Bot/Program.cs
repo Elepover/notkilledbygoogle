@@ -21,7 +21,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.2.28a";
+        private const string Version = "0.2.30a";
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -36,24 +36,9 @@ namespace NotKilledByGoogle.Bot
         private static GraveKeeper _keeper = null!;
         private static AnnouncementScheduler _scheduler = null!;
         private static TelegramBotClient _bot = null!;
+        private static UpdateRouter _updateRouter = null!;
         private static int _cancelCounter = 3;
 
-        private static UpdateRouter _updateRouter = new(_bot, _keeper, ConfigManager)
-        {
-            new InlineQueryRouter()
-            {
-                new DefaultInlineQueryRoute(),
-                new SearchInlineQueryRoute()
-            },
-            new MessageRouter()
-            {
-                new PrivateChatCommandRouter()
-                {
-                    new StartCommand()
-                },
-                new PublicChatCommandRouter()
-            }
-        };
         #endregion
 
         #region Event handlers
@@ -276,7 +261,7 @@ namespace NotKilledByGoogle.Bot
             foreach (var id in ConfigManager.Config.BroadcastId)
             {
                 Info($"Sending message to chat {id}...");
-                await _bot.SendTextMessageAsync(new(id), Utils.EscapeIllegalMarkdownV2Chars(message), ParseMode.MarkdownV2, true);
+                await _bot.SendTextMessageAsync(new(id), Utils.Escape(message), ParseMode.MarkdownV2, true);
             }
         }
 
@@ -338,6 +323,7 @@ namespace NotKilledByGoogle.Bot
                  *     Purpose: make initial schedule and
                  *              check for changes periodically
                  * - Start monthly update announcer
+                 * - Initialize update router
                  * - Start message receiving
                  */
                 Info("Preparing Telegram bot...");
@@ -361,10 +347,33 @@ namespace NotKilledByGoogle.Bot
 
                 Info("Preparing monthly update announcer...");
                 _ = Task.Run(MonthlyUpdater);
-
+                
+                Info("Preparing update router..."); 
+                _updateRouter = new(_bot, _keeper, ConfigManager)
+                {
+                    new InlineQueryRouter()
+                    {
+                        new DefaultInlineQueryRoute(),
+                        new SearchInlineQueryRoute()
+                    },
+                    new MessageRouter()
+                    {
+                        new PrivateChatCommandRouter()
+                        {
+                            new StartCommand()
+                        },
+                        new PublicChatCommandRouter()
+                    }
+                };
+                
                 Info("Starting update receiving...");
                 _bot.OnUpdate += OnUpdate;
-                _bot.StartReceiving(new[] {UpdateType.ChannelPost}, MainCancellationTokenSource.Token);
+                _bot.StartReceiving(new[]
+                {
+                    UpdateType.ChannelPost,
+                    UpdateType.InlineQuery,
+                    UpdateType.Message
+                }, MainCancellationTokenSource.Token);
 
                 /* STAGE 3
                  * All up & running, make the Main() task go into standby state

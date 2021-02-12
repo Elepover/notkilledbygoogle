@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,13 +8,18 @@ namespace NotKilledByGoogle.Bot
 {
     public static class Utils
     {
-        private static readonly char[] IllegalMarkdownV2Chars =
+        public static readonly char[] IllegalMarkdownV2Chars =
         {
             // '*', '`', '_', '~', '[', ']', '(', ')' are ignored Markdown stuff because caller
             // should escape them manually for clarity
             '>', '#',
             '+', '-', '=', '|', '{',
             '}', '.', '!'
+        };
+
+        public static readonly char[] AdditionalChars =
+        {
+            '*', '`', '_', '~', '[', ']', '(', ')'
         };
         
         /// <summary>
@@ -58,12 +63,15 @@ namespace NotKilledByGoogle.Bot
         /// Escape illegal characters. <br />
         /// <code>'*', '`', '_', '~', '[', ']', '(', ')'</code> are ignored Markdown stuff. Escape them manually.
         /// </summary>
-        /// <param name="str"></param>
+        /// <param name="str"><see langword="string"/> to escape.</param>
+        /// <param name="additional">Additional characters to escape.</param>
         /// <returns></returns>
-        public static string EscapeIllegalMarkdownV2Chars(string str)
+        public static string Escape(string str, params char[] additional)
         {
             var escapeMode = false;
             var sb = new StringBuilder();
+            var chars = new List<char>(IllegalMarkdownV2Chars);
+            chars.AddRange(additional);
 
             foreach (var ch in str)
             {
@@ -84,7 +92,7 @@ namespace NotKilledByGoogle.Bot
                 }
 
                 // not in escape mode, check if it needs to be escaped.
-                if (IllegalMarkdownV2Chars.Contains(ch))
+                if (chars.Contains(ch))
                 {
                     // escape it
                     sb.Append('\\');
@@ -95,6 +103,15 @@ namespace NotKilledByGoogle.Bot
             }
 
             return sb.ToString();
+        }
+
+        public static string Age(TimeSpan duration)
+        {
+            if (duration.TotalDays < 365)
+                return $"{Math.Truncate(duration.TotalDays)} days";
+            var days = Convert.ToInt32(duration.TotalDays);
+            var remainder = days % 365;
+            return $"{days / 365} years{(remainder == 0 ? "" : $" and {remainder} day{(remainder == 1 ? "" : "s")}")}.";
         }
     }
 }

@@ -12,7 +12,9 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
         public Task ProcessAsync(BotRoutingArgs args)
             => args.BotClient.AnswerInlineQueryAsync(
                 inlineQueryId: args.IncomingUpdate.InlineQuery.Id,
-                results: args.GraveKeeper.Gravestones.Select(InlineQueryResponseParser.GetArticleResult),
+                results: args.GraveKeeper.Gravestones
+                    .Select(InlineQueryResponseParser.GetArticleResult)
+                    .Take(50),
                 isPersonal: false);
     }
 }

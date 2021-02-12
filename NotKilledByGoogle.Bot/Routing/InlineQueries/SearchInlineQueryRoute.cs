@@ -17,7 +17,8 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
                         x.Name
                             .ToLowerInvariant()
                             .Contains(args.IncomingUpdate.InlineQuery.Query.ToLowerInvariant()))
-                    .Select(InlineQueryResponseParser.GetArticleResult),
+                    .Select(InlineQueryResponseParser.GetArticleResult)
+                    .Take(50),
                 isPersonal: false);
     }
 }

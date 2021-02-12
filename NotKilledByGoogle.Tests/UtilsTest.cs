@@ -59,7 +59,7 @@ namespace NotKilledByGoogle.Tests
             "Today's Security Code is: [5,33,41,18].",
             "Today's Security Code is: [5,33,41,18]\\.")]
         public void TestEscaping(string original, string expected)
-            => Assert.Equal(expected, Utils.EscapeIllegalMarkdownV2Chars(original));
+            => Assert.Equal(expected, Utils.Escape(original));
 
         [Theory]
         [InlineData("Corrupted Core: are you ready to start?")]
@@ -69,6 +69,6 @@ namespace NotKilledByGoogle.Tests
         [InlineData("The gun must be part magnesium\\.\\.\\. It feels like I'm outputting an extra half a volt\\.")]
         [InlineData("Keep an eye on me: I'm going to do some scheming\\. Here I g\\-\\[BZZZ\\!\\]")]
         public void TestAlreadyEscaped(string escaped)
-            => Assert.Equal(escaped, Utils.EscapeIllegalMarkdownV2Chars(escaped));
+            => Assert.Equal(escaped, Utils.Escape(escaped));
     }
 }
