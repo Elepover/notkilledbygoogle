@@ -84,7 +84,7 @@ namespace NotKilledByGoogle.Bot
         {
             try
             {
-                Info("Routing incoming update...");
+                Info($"Routing incoming update, type: {e.Update.Type}...");
                 var sw = new Stopwatch();
                 sw.Start();
                 await _updateRouter.RouteAsync(e.Update);

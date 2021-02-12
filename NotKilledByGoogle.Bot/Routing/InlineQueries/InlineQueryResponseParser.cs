@@ -24,10 +24,10 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
             => $"<b>{gravestone.Name}</b>\n\n" + 
                $"📱 <b>Type</b>: {MessageFormatter.DeceasedTypeName(gravestone.DeceasedType).CapitalizeFirst()}\n" +
                $"🚀 <b>Launched</b>: {gravestone.DateOpen:ddd MMM dd, yyyy}\n" +
-               $"⏱ <b>Fate</b>: {(IsDead(gravestone) ? "<b>Dead</b> since" : "Dies on")} {gravestone.DateClose:ddd MMM dd, yyyy}\n" +
+               $"⏱ <b>Fate</b>: {(IsDead(gravestone) ? "<i>Dead</i> since" : "Dies on")} {gravestone.DateClose:ddd MMM dd, yyyy}\n" +
                $"🗓 <b>Time {(IsDead(gravestone) ? "since" : "left")}</b>: {(IsDead(gravestone) ? Utils.Age(DateTimeOffset.UtcNow - gravestone.DateClose) : Utils.Age(gravestone.DateClose - DateTimeOffset.UtcNow))}\n" +
                $"⌛️ <b>Lifespan</b>: {Utils.Age(gravestone.DateClose - gravestone.DateOpen)}\n" +
                $"📝 <b>History</b>: {gravestone.Description}\n\n" +
-               $"📰 <b><a href=\"{gravestone.ReferenceLink}\">Reports</a></b>";
+               $"<a href=\"{gravestone.ReferenceLink}\">📰 <b>Reports</b></a>";
     }
 }

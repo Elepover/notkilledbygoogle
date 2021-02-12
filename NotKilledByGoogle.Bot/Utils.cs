@@ -108,11 +108,14 @@ namespace NotKilledByGoogle.Bot
 
         public static string Age(TimeSpan duration)
         {
+            string S(int num)
+                => num == 1 ? "" : "s";
             if (duration.TotalDays < 365)
                 return $"{Math.Truncate(duration.TotalDays)} days";
             var days = Convert.ToInt32(duration.TotalDays);
+            var years = days / 365;
             var remainder = days % 365;
-            return $"{days / 365} years{(remainder == 0 ? "" : $" and {remainder} day{(remainder == 1 ? "" : "s")}")}";
+            return $"{years} year{S(years)}{(remainder == 0 ? "" : $" and {remainder} day{S(remainder)}")}";
         }
 
         public static string CapitalizeFirst(this string str)
