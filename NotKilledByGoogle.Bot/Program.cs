@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Config;
 using NotKilledByGoogle.Bot.Grave;
 using NotKilledByGoogle.Bot.Grave.Helpers;
+using NotKilledByGoogle.Bot.Routing;
+using NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands;
+using NotKilledByGoogle.Bot.Routing.InlineQueries;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
@@ -18,7 +21,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.1.25a";
+        private const string Version = "0.2.28a";
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -34,6 +37,23 @@ namespace NotKilledByGoogle.Bot
         private static AnnouncementScheduler _scheduler = null!;
         private static TelegramBotClient _bot = null!;
         private static int _cancelCounter = 3;
+
+        private static UpdateRouter _updateRouter = new(_bot, _keeper, ConfigManager)
+        {
+            new InlineQueryRouter()
+            {
+                new DefaultInlineQueryRoute(),
+                new SearchInlineQueryRoute()
+            },
+            new MessageRouter()
+            {
+                new PrivateChatCommandRouter()
+                {
+                    new StartCommand()
+                },
+                new PublicChatCommandRouter()
+            }
+        };
         #endregion
 
         #region Event handlers
@@ -74,19 +94,16 @@ namespace NotKilledByGoogle.Bot
             }
         }
 
-        private static void OnUpdate(object? sender, UpdateEventArgs e)
+        private static async void OnUpdate(object? sender, UpdateEventArgs e)
         {
             try
             {
-                switch (e.Update.Type)
-                {
-                    case UpdateType.ChannelPost:
-                        Info($"Received channel post from channel {e.Update.ChannelPost.Chat.Title} (ID: {e.Update.ChannelPost.Chat.Id})");
-                        break;
-                    case UpdateType.InlineQuery:
-                        Info($"Received inline query from "); // TODO: add parser
-                        break;
-                }
+                Info("Routing incoming update...");
+                var sw = new Stopwatch();
+                sw.Start();
+                await _updateRouter.RouteAsync(e.Update);
+                Info($"Processing complete, took {sw.Elapsed.TotalSeconds:F2}s.");
+                
             }
             catch (Exception ex)
             {
@@ -373,7 +390,7 @@ namespace NotKilledByGoogle.Bot
             }
             catch (OperationCanceledException)
             {
-                Info($"Cancelling startup after {AppStopwatch.Elapsed:c}.");
+                Info($"Startup cancelled after {AppStopwatch.Elapsed:c}.");
             }
             catch (Exception ex)
             {

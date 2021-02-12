@@ -19,7 +19,8 @@ namespace NotKilledByGoogle.Bot
 
         public static void Error(string log, [CallerMemberName] string caller = "?")
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Red;
             Console.Error.WriteLine(GetPrefix("FAIL", caller) + log);
             Console.ResetColor();
         }
