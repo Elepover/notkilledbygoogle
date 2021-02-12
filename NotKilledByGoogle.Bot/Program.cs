@@ -21,7 +21,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.2.30a";
+        private const string Version = "0.2.31a";
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -32,6 +32,7 @@ namespace NotKilledByGoogle.Bot
         private static readonly Stopwatch AppStopwatch = new();
         private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>() {FilePath = ConfigPath};
         private static readonly CancellationTokenSource MainCancellationTokenSource = new();
+        private static readonly TaskCompletionSource AnnouncerReadyTaskCompletionSource = new();
 
         private static GraveKeeper _keeper = null!;
         private static AnnouncementScheduler _scheduler = null!;
@@ -109,14 +110,14 @@ namespace NotKilledByGoogle.Bot
              */
             
             // wait until GraveKeeper tells it that data is ready
-            var tcs = new TaskCompletionSource();
+            var initialFetchTcs = new TaskCompletionSource();
             var sw = new Stopwatch();
-            GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => tcs.SetResult();
+            GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => initialFetchTcs.SetResult();
             _keeper.Fetched += oneTimeHandler;
             sw.Start();
             _keeper.Start();
             Info("Awaiting graveyard data...");
-            await tcs.Task;
+            await initialFetchTcs.Task;
             sw.Stop();
             _keeper.Fetched -= oneTimeHandler;
             
@@ -143,6 +144,7 @@ namespace NotKilledByGoogle.Bot
             
             // ready, enter next stage
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
+            AnnouncerReadyTaskCompletionSource.SetResult();
 
             /* LOOP STAGE
              * Continuously fetch new graveyard data and make
@@ -344,10 +346,11 @@ namespace NotKilledByGoogle.Bot
                 _scheduler = new();
                 _scheduler.Announcement += OnAnnouncement;
                 _ = Task.Run(DeathAnnouncer);
+                await AnnouncerReadyTaskCompletionSource.Task;
 
                 Info("Preparing monthly update announcer...");
                 _ = Task.Run(MonthlyUpdater);
-                
+
                 Info("Preparing update router..."); 
                 _updateRouter = new(_bot, _keeper, ConfigManager)
                 {

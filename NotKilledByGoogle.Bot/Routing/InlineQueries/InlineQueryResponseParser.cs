@@ -22,12 +22,12 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
 
         public static string GetMessageText(Gravestone gravestone)
             => $"<b>{gravestone.Name}</b>\n\n" + 
-               $"📱 <b>Type</b>: {MessageFormatter.DeceasedTypeName(gravestone.DeceasedType)}\n" +
-               $"🚀 <b>Launched on</b>: {gravestone.DateOpen:ddd MM dd, yyyy}\n" +
-               $"⏱ <b>Status</b>: {(IsDead(gravestone) ? "<b>dead</b>" : "dying")} on {gravestone.DateClose:ddd MMM dd, yyyy}\n" +
-               $"🗓 <b>Days {(IsDead(gravestone) ? "since" : "left")}</b>: {Math.Abs((DateTimeOffset.UtcNow - gravestone.DateClose).TotalDays):F1}\n" +
+               $"📱 <b>Type</b>: {MessageFormatter.DeceasedTypeName(gravestone.DeceasedType).CapitalizeFirst()}\n" +
+               $"🚀 <b>Launched</b>: {gravestone.DateOpen:ddd MMM dd, yyyy}\n" +
+               $"⏱ <b>Fate</b>: {(IsDead(gravestone) ? "<b>Dead</b> since" : "Dies on")} {gravestone.DateClose:ddd MMM dd, yyyy}\n" +
+               $"🗓 <b>Time {(IsDead(gravestone) ? "since" : "left")}</b>: {(IsDead(gravestone) ? Utils.Age(DateTimeOffset.UtcNow - gravestone.DateClose) : Utils.Age(gravestone.DateClose - DateTimeOffset.UtcNow))}\n" +
                $"⌛️ <b>Lifespan</b>: {Utils.Age(gravestone.DateClose - gravestone.DateOpen)}\n" +
                $"📝 <b>History</b>: {gravestone.Description}\n\n" +
-               $"📰 <b>Reports</b>: <a href=\"{gravestone.ReferenceLink}\">link</a>";
+               $"📰 <b><a href=\"{gravestone.ReferenceLink}\">Reports</a></b>";
     }
 }

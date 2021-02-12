@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,7 +112,14 @@ namespace NotKilledByGoogle.Bot
                 return $"{Math.Truncate(duration.TotalDays)} days";
             var days = Convert.ToInt32(duration.TotalDays);
             var remainder = days % 365;
-            return $"{days / 365} years{(remainder == 0 ? "" : $" and {remainder} day{(remainder == 1 ? "" : "s")}")}.";
+            return $"{days / 365} years{(remainder == 0 ? "" : $" and {remainder} day{(remainder == 1 ? "" : "s")}")}";
+        }
+
+        public static string CapitalizeFirst(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                throw new ArgumentException("Input cannot be empty or null.");
+            return str.First().ToString().ToUpper() + str.Substring(1);
         }
     }
 }
