@@ -7,9 +7,9 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> container an inline query.
     /// </summary>
-    public class InlineQueryRouter : Router<Update, BotRoutingArgs>
+    public class InlineQueryRouter : Router<BotRoutingArgs>
     {
-        public override bool IsEligible(Update incoming)
-            => incoming.Type == UpdateType.InlineQuery;
+        public override bool IsEligible(BotRoutingArgs args)
+            => args.IncomingUpdate.Type == UpdateType.InlineQuery;
     }
 }

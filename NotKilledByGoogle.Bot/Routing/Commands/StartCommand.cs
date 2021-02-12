@@ -8,7 +8,7 @@ namespace NotKilledByGoogle.Bot.Routing.Commands
         
         public override Task ProcessAsync(BotRoutingArgs args)
             => args.BotClient.SendTextMessageAsync(
-                args.IncomingData.Message.Chat.Id,
+                args.IncomingUpdate.Message.Chat.Id,
                 "Hello! Private message features are not developed yet but stay tuned there!");
     }
 }

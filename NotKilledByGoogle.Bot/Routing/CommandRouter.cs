@@ -7,10 +7,10 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> container a command (routed by <see cref="MessageRouter"/>).
     /// </summary>
-    public class CommandRouter : Router<Update, BotRoutingArgs>
+    public class CommandRouter : Router<BotRoutingArgs>
     {
-        public override bool IsEligible(Update incoming)
-            => incoming.Type == UpdateType.Message &&
-               (incoming.Message.Text?.StartsWith('/') ?? false);
+        public override bool IsEligible(BotRoutingArgs args)
+            => args.IncomingUpdate.Type == UpdateType.Message &&
+               (args.IncomingUpdate.Message.Text?.StartsWith('/') ?? false);
     }
 }

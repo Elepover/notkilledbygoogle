@@ -4,15 +4,15 @@ using Telegram.Bot.Types;
 
 namespace NotKilledByGoogle.Bot.Routing
 {
-    public class BotRoutingArgs : IRoutingArgs<Update>
+    public class BotRoutingArgs : IRoutingArgs
     {
-        public BotRoutingArgs(ITelegramBotClient client, Update incomingData)
+        public BotRoutingArgs(ITelegramBotClient client, Update incomingUpdate)
         {
             BotClient = client;
-            IncomingData = incomingData;
+            IncomingUpdate = incomingUpdate;
         }
         public ITelegramBotClient BotClient { get; }
         public bool Continue { get; set; }
-        public Update IncomingData { get; set; }
+        public Update IncomingUpdate { get; set; }
     }
 }

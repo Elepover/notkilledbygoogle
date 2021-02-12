@@ -8,7 +8,7 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> object.
     /// </summary>
-    public class UpdateRouter : Router<Update, BotRoutingArgs>
+    public class UpdateRouter : Router<BotRoutingArgs>
     {
         public UpdateRouter(ITelegramBotClient client)
         {
@@ -18,6 +18,6 @@ namespace NotKilledByGoogle.Bot.Routing
         private ITelegramBotClient _botClient;
 
         public override Task ProcessAsync(BotRoutingArgs args)
-            => RouteAsync(new BotRoutingArgs(_botClient, args.IncomingData));
+            => RouteAsync(new BotRoutingArgs(_botClient, args.IncomingUpdate));
     }
 }
