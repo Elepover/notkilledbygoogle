@@ -6,7 +6,7 @@ using Telegram.Bot.Types;
 
 namespace NotKilledByGoogle.Bot.Routing
 {
-    public class BotRoutingArgs : IRoutingArgs
+    public class BotRoutingArgs : IRoutingContext
     {
         public BotRoutingArgs(ITelegramBotClient client, GraveKeeper graveKeeper, IConfigManager<BotConfig> configManager, Update incomingUpdate)
         {
