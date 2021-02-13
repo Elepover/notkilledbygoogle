@@ -4,19 +4,19 @@ using SimpleRouting.Routing;
 
 namespace NotKilledByGoogle.Bot.Routing.InlineQueries
 {
-    public class SearchInlineQueryRoute : IRoutable<BotRoutingArgs>
+    public class SearchInlineQueryRoute : IRoutable<BotRoutingContext>
     {
-        public bool IsEligible(BotRoutingArgs args)
-            => !string.IsNullOrWhiteSpace(args.IncomingUpdate.InlineQuery.Query);
+        public bool IsEligible(BotRoutingContext context)
+            => !string.IsNullOrWhiteSpace(context.Update.InlineQuery.Query);
 
-        public Task ProcessAsync(BotRoutingArgs args)
-            => args.BotClient.AnswerInlineQueryAsync(
-                inlineQueryId: args.IncomingUpdate.InlineQuery.Id,
-                results: args.GraveKeeper.Gravestones
+        public Task ProcessAsync(BotRoutingContext context)
+            => context.BotClient.AnswerInlineQueryAsync(
+                inlineQueryId: context.Update.InlineQuery.Id,
+                results: context.GraveKeeper.Gravestones
                     .Where(x =>
                         x.Name
                             .ToLowerInvariant()
-                            .Contains(args.IncomingUpdate.InlineQuery.Query.ToLowerInvariant()))
+                            .Contains(context.Update.InlineQuery.Query.ToLowerInvariant()))
                     .Select(InlineQueryResponseComposer.GetArticleResult)
                     .Take(50),
                 isPersonal: false);

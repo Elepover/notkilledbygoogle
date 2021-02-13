@@ -10,7 +10,7 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
         public static InlineQueryResultArticle GetArticleResult(Gravestone gravestone)
             => new(
                 $"{gravestone.DateClose:d}-{gravestone.Name}",
-                $"{gravestone.Name} ({(gravestone.DateClose < DateTimeOffset.UtcNow ? "dead" : "dying")} on {gravestone.DateClose:d})",
+                $"{gravestone.Name} ({(gravestone.DateClose < DateTimeOffset.UtcNow ? "dead since" : "dies on")} {gravestone.DateClose:d})",
                 new InputTextMessageContent(GetMessageText(gravestone))
                 {
                     ParseMode = ParseMode.Html,

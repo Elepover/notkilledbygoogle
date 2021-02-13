@@ -21,7 +21,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.2.31a";
+        private const string Version = "0.2.33a";
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");

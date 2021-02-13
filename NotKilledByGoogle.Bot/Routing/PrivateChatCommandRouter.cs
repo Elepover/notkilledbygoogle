@@ -7,11 +7,11 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> container a command (routed by <see cref="MessageRouter"/>).
     /// </summary>
-    public class PrivateChatCommandRouter : Router<BotRoutingArgs>
+    public class PrivateChatCommandRouter : Router<BotRoutingContext>
     {
-        public override bool IsEligible(BotRoutingArgs args)
-            => args.IncomingUpdate.Type == UpdateType.Message &&
-               args.IncomingUpdate.Message.Chat.Type == ChatType.Private &&
-               (args.IncomingUpdate.Message.Text?.StartsWith('/') ?? false);
+        public override bool IsEligible(BotRoutingContext context)
+            => context.Update.Type == UpdateType.Message &&
+               context.Update.Message.Chat.Type == ChatType.Private &&
+               (context.Update.Message.Text?.StartsWith('/') ?? false);
     }
 }

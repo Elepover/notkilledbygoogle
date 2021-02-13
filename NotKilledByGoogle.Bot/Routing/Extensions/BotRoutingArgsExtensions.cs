@@ -9,18 +9,18 @@ namespace NotKilledByGoogle.Bot.Routing.Extensions
         /// Send text reply to a message. Only works when <see cref="UpdateType"/> is <see cref="UpdateType.Message"/>.
         /// </summary>
         public static Task ReplyTextMessageAsync(
-            this BotRoutingArgs args,
+            this BotRoutingContext context,
             string text,
             ParseMode parseMode = ParseMode.Default,
             bool disableWebPagePreview = false,
             bool disableNotification = false)
-            => args.BotClient.SendTextMessageAsync(
-                args.IncomingUpdate.Message.Chat.Id,
+            => context.BotClient.SendTextMessageAsync(
+                context.Update.Message.Chat.Id,
                 text,
                 parseMode,
                 disableWebPagePreview,
                 disableNotification,
-                args.IncomingUpdate.Message.MessageId
+                context.Update.Message.MessageId
             );
     }
 }

@@ -10,7 +10,7 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> object.
     /// </summary>
-    public class UpdateRouter : Router<BotRoutingArgs>
+    public class UpdateRouter : Router<BotRoutingContext>
     {
         public UpdateRouter(ITelegramBotClient client, GraveKeeper graveKeeper, IConfigManager<BotConfig> configManager)
         {
@@ -24,7 +24,7 @@ namespace NotKilledByGoogle.Bot.Routing
         private IConfigManager<BotConfig> _configManager;
 
         public Task RouteAsync(Update update)
-            => RouteAsync(new BotRoutingArgs(
+            => RouteAsync(new BotRoutingContext(
                 _botClient,
                 _graveKeeper,
                 _configManager,

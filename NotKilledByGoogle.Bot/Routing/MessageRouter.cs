@@ -7,9 +7,9 @@ namespace NotKilledByGoogle.Bot.Routing
     /// <summary>
     /// A router to route an <see cref="Update"/> container a message.
     /// </summary>
-    public class MessageRouter : Router<BotRoutingArgs>
+    public class MessageRouter : Router<BotRoutingContext>
     {
-        public override bool IsEligible(BotRoutingArgs args)
-            => args.IncomingUpdate.Type == UpdateType.Message;
+        public override bool IsEligible(BotRoutingContext context)
+            => context.Update.Type == UpdateType.Message;
     }
 }

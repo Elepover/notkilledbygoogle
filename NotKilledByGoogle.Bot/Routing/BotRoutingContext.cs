@@ -6,19 +6,19 @@ using Telegram.Bot.Types;
 
 namespace NotKilledByGoogle.Bot.Routing
 {
-    public class BotRoutingArgs : IRoutingContext
+    public class BotRoutingContext : IRoutingContext
     {
-        public BotRoutingArgs(ITelegramBotClient client, GraveKeeper graveKeeper, IConfigManager<BotConfig> configManager, Update incomingUpdate)
+        public BotRoutingContext(ITelegramBotClient client, GraveKeeper graveKeeper, IConfigManager<BotConfig> configManager, Update update)
         {
             BotClient = client;
             GraveKeeper = graveKeeper;
             ConfigManager = configManager;
-            IncomingUpdate = incomingUpdate;
+            Update = update;
         }
         public ITelegramBotClient BotClient { get; }
         public GraveKeeper GraveKeeper { get; }
         public IConfigManager<BotConfig> ConfigManager { get; }
-        public bool Continue { get; set; } = false;
-        public Update IncomingUpdate { get; set; }
+        public RouteTarget Target { get; set; } = RouteTarget.Stop;
+        public Update Update { get; }
     }
 }

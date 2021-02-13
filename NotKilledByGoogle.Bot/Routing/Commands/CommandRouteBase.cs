@@ -3,7 +3,7 @@ using SimpleRouting.Routing;
 
 namespace NotKilledByGoogle.Bot.Routing.Commands
 {
-    public abstract class CommandRouteBase : IRoutable<BotRoutingArgs>
+    public abstract class CommandRouteBase : IRoutable<BotRoutingContext>
     {
         /// <summary>
         /// Command prefix in lower case, without leading <c>'/'</c>.
@@ -12,14 +12,14 @@ namespace NotKilledByGoogle.Bot.Routing.Commands
         /// <summary>
         /// Process the route.
         /// </summary>
-        /// <param name="args">Incoming <see cref="BotRoutingArgs"/>.</param>
-        public abstract Task ProcessAsync(BotRoutingArgs args);
+        /// <param name="context">Incoming <see cref="BotRoutingContext"/>.</param>
+        public abstract Task ProcessAsync(BotRoutingContext context);
 
         /// <summary>
         /// Check if the command route can handle this command. Prefix is not case-sensitive.
         /// </summary>
-        /// <param name="args">Incoming <see cref="BotRoutingArgs"/>.</param>
-        public bool IsEligible(BotRoutingArgs args)
-            => args.IncomingUpdate.Message?.Text?.ToLowerInvariant().StartsWith("/" + Prefix) ?? false;
+        /// <param name="context">Incoming <see cref="BotRoutingContext"/>.</param>
+        public bool IsEligible(BotRoutingContext context)
+            => context.Update.Message?.Text?.ToLowerInvariant().StartsWith("/" + Prefix) ?? false;
     }
 }
