@@ -5,7 +5,7 @@ using Telegram.Bot.Types.InlineQueryResults;
 
 namespace NotKilledByGoogle.Bot.Routing.InlineQueries
 {
-    public static class InlineQueryResponseParser
+    public static class InlineQueryResponseComposer
     {
         public static InlineQueryResultArticle GetArticleResult(Gravestone gravestone)
             => new(

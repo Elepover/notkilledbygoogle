@@ -13,7 +13,7 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
             => args.BotClient.AnswerInlineQueryAsync(
                 inlineQueryId: args.IncomingUpdate.InlineQuery.Id,
                 results: args.GraveKeeper.Gravestones
-                    .Select(InlineQueryResponseParser.GetArticleResult)
+                    .Select(InlineQueryResponseComposer.GetArticleResult)
                     .Take(50),
                 isPersonal: false);
     }
