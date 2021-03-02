@@ -40,6 +40,7 @@ namespace NotKilledByGoogle.Bot.Statistics
             return false;
         }
 
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
         public override int GetHashCode() => _i;
         public override string ToString() => _i.ToString();
     }
