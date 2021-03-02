@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using SimpleRouting.Routing;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -11,5 +12,11 @@ namespace NotKilledByGoogle.Bot.Routing
     {
         public override bool IsEligible(BotRoutingContext context)
             => context.Update.Type == UpdateType.InlineQuery;
+
+        public override Task ProcessAsync(BotRoutingContext context)
+        {
+            context.Stats.InlineQueriesProcessed.Inc();
+            return base.ProcessAsync(context);
+        }
     }
 }

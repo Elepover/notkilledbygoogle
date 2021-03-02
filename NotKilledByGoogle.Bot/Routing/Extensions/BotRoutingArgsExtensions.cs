@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Routing.Commands;
 using Telegram.Bot.Types.Enums;
@@ -32,7 +33,7 @@ namespace NotKilledByGoogle.Bot.Routing.Extensions
             => context.Update.Message.From.Id;
 
         public static bool IsFromAdmin(this BotRoutingContext context)
-            => context.GetSenderId() == context.ConfigManager.Config.AdminId;
+            => context.ConfigManager.Config.AdminIds.Contains(context.GetSenderId());
 
         public static bool IsFromBot(this BotRoutingContext context)
             => context.Update.Message.From.IsBot;

@@ -11,6 +11,7 @@ using NotKilledByGoogle.Bot.Grave.Helpers;
 using NotKilledByGoogle.Bot.Routing;
 using NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands;
 using NotKilledByGoogle.Bot.Routing.InlineQueries;
+using NotKilledByGoogle.Bot.Statistics;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
@@ -21,8 +22,8 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-
-        public const string Version = "0.2.34a";
+        public const string Version = "0.2.35a";
+        public const int InternalVersion = 78;
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -38,6 +39,7 @@ namespace NotKilledByGoogle.Bot
         private static AnnouncementScheduler _scheduler = null!;
         private static TelegramBotClient _bot = null!;
         private static UpdateRouter _updateRouter = null!;
+        private static Stats _stats = new();
         private static int _cancelCounter = 3;
 
         #endregion
@@ -62,7 +64,10 @@ namespace NotKilledByGoogle.Bot
         }
         
         private static void OnFetchError(object? sender, FetchErrorEventArgs e)
-            => Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
+        {
+            _stats.FetchErrors.Inc();
+            Error($"Failed to fetch graveyard data from {e.FailedUrl} (last successful fetch at {e.LastSuccessfulFetch:R}): {e.Exception}");
+        }
 
         private static void OnFetched(object? sender, FetchedEventArgs e)
             => Info("Fetched graveyard data from " + e.FetchUrl);
@@ -84,6 +89,7 @@ namespace NotKilledByGoogle.Bot
         {
             try
             {
+                _stats.UpdatesReceived.Inc();
                 Info($"Routing incoming update, type: {e.Update.Type}...");
                 var sw = new Stopwatch();
                 sw.Start();
@@ -93,6 +99,7 @@ namespace NotKilledByGoogle.Bot
             }
             catch (Exception ex)
             {
+                _stats.ProcessErrors.Inc();
                 Error("Error processing update: " + ex);
             }
         }
@@ -355,7 +362,7 @@ namespace NotKilledByGoogle.Bot
                 _ = Task.Run(MonthlyUpdater);
 
                 Info("Preparing update router..."); 
-                _updateRouter = new(_bot, _keeper, ConfigManager)
+                _updateRouter = new(_bot, _keeper, ConfigManager, _stats)
                 {
                     new InlineQueryRouter()
                     {

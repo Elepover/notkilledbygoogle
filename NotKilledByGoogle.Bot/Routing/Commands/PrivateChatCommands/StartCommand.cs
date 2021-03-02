@@ -1,6 +1,8 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Routing.Extensions;
+using Telegram.Bot.Types.Enums;
 
 namespace NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands
 {
@@ -18,7 +20,16 @@ namespace NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands
         {
             if (context.IsFromAdmin())
             {
-                await context.ReplyTextMessageAsync($"Hello!\nBot version is {Program.Version}.\nUptime: {DateTime.UtcNow:hh:mm}, up {Program.AppStopwatch.Elapsed:d day(s), hh:mm:ss}");
+                var sb = new StringBuilder();
+                sb.Append("Hello! You're seeing this message because you're recognized as an *administrator*.\n");
+                sb.Append($"Bot *version* is `{Program.Version} ({Program.InternalVersion})`\n");
+                sb.Append($"*Uptime*: `{DateTime.UtcNow:hh:mm}, up {Program.AppStopwatch.Elapsed:d' day(s) 'hh':'mm}`\n\n");
+                sb.Append("*Stats*:\n");
+                foreach (var (name, val) in context.Stats.RegisteredSafeInts)
+                {
+                    sb.Append($"- `{name}`: {val}\n");
+                }
+                await context.ReplyTextMessageAsync(sb.ToString(), ParseMode.Markdown);
             }
             else
             {
