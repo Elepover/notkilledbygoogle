@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using NotKilledByGoogle.Bot.Routing.Commands;
 using Telegram.Bot.Types.Enums;
 
 namespace NotKilledByGoogle.Bot.Routing.Extensions
@@ -22,5 +23,32 @@ namespace NotKilledByGoogle.Bot.Routing.Extensions
                 disableNotification,
                 context.Update.Message.MessageId
             );
+
+        /// <summary>
+        /// Get message sender's Telegram ID.
+        /// </summary>
+        /// <returns></returns>
+        public static long GetSenderId(this BotRoutingContext context)
+            => context.Update.Message.From.Id;
+
+        public static bool IsFromAdmin(this BotRoutingContext context)
+            => context.GetSenderId() == context.ConfigManager.Config.AdminId;
+
+        public static bool IsFromBot(this BotRoutingContext context)
+            => context.Update.Message.From.IsBot;
+
+        public static bool IsFromRealPerson(this BotRoutingContext context)
+            => !context.IsFromBot();
+
+        public static SenderClassification GetSenderClassification(this BotRoutingContext context)
+        {
+            var result = SenderClassification.None;
+
+            if (context.IsFromBot()) result |= SenderClassification.Bot;
+            if (context.IsFromRealPerson()) result |= SenderClassification.User;
+            if (context.IsFromAdmin()) result |= SenderClassification.Admin;
+
+            return result;
+        }
     }
 }

@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using NotKilledByGoogle.Bot.Routing.Extensions;
 using SimpleRouting.Routing;
 
 namespace NotKilledByGoogle.Bot.Routing.Commands
@@ -9,6 +12,12 @@ namespace NotKilledByGoogle.Bot.Routing.Commands
         /// Command prefix in lower case, without leading <c>'/'</c>.
         /// </summary>
         public abstract string Prefix { get; }
+        
+        /// <summary>
+        /// Accepted sender classification. 
+        /// </summary>
+        public abstract IEnumerable<SenderClassification> AcceptedFrom { get; }
+        
         /// <summary>
         /// Process the route.
         /// </summary>
@@ -20,6 +29,12 @@ namespace NotKilledByGoogle.Bot.Routing.Commands
         /// </summary>
         /// <param name="context">Incoming <see cref="BotRoutingContext"/>.</param>
         public bool IsEligible(BotRoutingContext context)
-            => context.Update.Message?.Text?.ToLowerInvariant().StartsWith("/" + Prefix) ?? false;
+        {
+            if (context.Update.Message?.Text?.ToLowerInvariant().StartsWith("/" + Prefix) != true)
+                return false;
+
+            var classification = context.GetSenderClassification();
+            return AcceptedFrom.Any(acceptedFlag => classification.HasFlag(acceptedFlag));
+        }
     }
 }

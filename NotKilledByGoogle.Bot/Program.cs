@@ -21,7 +21,8 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        private const string Version = "0.2.33a";
+
+        public const string Version = "0.2.34a";
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -29,10 +30,9 @@ namespace NotKilledByGoogle.Bot
         #endregion
 
         #region Runtime "global" variables
-        private static readonly Stopwatch AppStopwatch = new();
+        public static readonly Stopwatch AppStopwatch = new();
         private static readonly IConfigManager<BotConfig> ConfigManager = new JsonConfigManager<BotConfig>() {FilePath = ConfigPath};
         private static readonly CancellationTokenSource MainCancellationTokenSource = new();
-        private static readonly TaskCompletionSource AnnouncerReadyTaskCompletionSource = new();
 
         private static GraveKeeper _keeper = null!;
         private static AnnouncementScheduler _scheduler = null!;
@@ -102,22 +102,23 @@ namespace NotKilledByGoogle.Bot
         /// <summary>
         /// Death announcer's logic. DON'T USE IT AS AN API.
         /// </summary>
+        /// <param name="tcsFlagReady"><see cref="TaskCompletionSource"/> to mark the death announcer as ready.</param>
         /// <returns></returns>
-        private static async Task DeathAnnouncer()
+        private static async Task DeathAnnouncer(TaskCompletionSource tcsFlagReady)
         {
             /* SETUP STAGE
              * Fetch initial graveyard data before proceeding to loop.
              */
             
             // wait until GraveKeeper tells it that data is ready
-            var initialFetchTcs = new TaskCompletionSource();
+            var fetchTcs = new TaskCompletionSource();
             var sw = new Stopwatch();
-            GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => initialFetchTcs.SetResult();
+            GraveKeeper.FetchedEventHandler oneTimeHandler = (_, _) => fetchTcs.SetResult();
             _keeper.Fetched += oneTimeHandler;
             sw.Start();
             _keeper.Start();
             Info("Awaiting graveyard data...");
-            await initialFetchTcs.Task;
+            await fetchTcs.Task;
             sw.Stop();
             _keeper.Fetched -= oneTimeHandler;
             
@@ -144,7 +145,7 @@ namespace NotKilledByGoogle.Bot
             
             // ready, enter next stage
             Info($"Death announcer is ready, {_scheduler.ScheduledCount} scheduled. (RIP for the {skipped} already dead products)");
-            AnnouncerReadyTaskCompletionSource.SetResult();
+            tcsFlagReady.SetResult(); // set initialization as complete.
 
             /* LOOP STAGE
              * Continuously fetch new graveyard data and make
@@ -225,8 +226,9 @@ namespace NotKilledByGoogle.Bot
                     var count = _scheduler.GetGravestones().Count;
                     if (count != 0)
                     {
-                        var nextOneToBeKilled = _keeper.Gravestones.Aggregate((knownMin, x)
-                            => x.DateClose < knownMin.DateClose ? x : knownMin);
+                        var nextOneToBeKilled = _keeper.Gravestones
+                            .Where(x => x.DateClose > now)
+                            .Aggregate((knownMin, x) => x.DateClose < knownMin.DateClose ? x : knownMin);
                         await BroadcastMessageAsync(
                             string.Format(MessageFormatter.NewMonthWithProductsToBeKilled, 
                                 MessageFormatter.MonthNames[DateTimeOffset.UtcNow.Month - 1],
@@ -345,8 +347,9 @@ namespace NotKilledByGoogle.Bot
                 Info("Preparing death announcer...");
                 _scheduler = new();
                 _scheduler.Announcement += OnAnnouncement;
-                _ = Task.Run(DeathAnnouncer);
-                await AnnouncerReadyTaskCompletionSource.Task;
+                var tcsReady = new TaskCompletionSource();
+                _ = Task.Run(() => DeathAnnouncer(tcsReady));
+                await tcsReady.Task;
 
                 Info("Preparing monthly update announcer...");
                 _ = Task.Run(MonthlyUpdater);
