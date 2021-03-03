@@ -26,13 +26,18 @@ namespace NotKilledByGoogle.Bot.Routing
         private IConfigManager<BotConfig> _configManager;
         private Stats _stats;
 
-        public Task RouteAsync(Update update)
-            => RouteAsync(new BotRoutingContext(
+        public async Task<BotRoutingContext> RouteAsync(Update update)
+        {
+            var context = new BotRoutingContext(
                 _botClient,
                 _graveKeeper,
                 _configManager,
                 _stats,
                 update
-            ));
+            );
+
+            await RouteAsync(context);
+            return context;
+        }
     }
 }

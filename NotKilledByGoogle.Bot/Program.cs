@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Config;
@@ -22,8 +23,8 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        public const string Version = "0.2.35a";
-        public const int InternalVersion = 78;
+        public const string Version = "0.2.41a";
+        public const int InternalVersion = 84;
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
             Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "config.json");
@@ -91,11 +92,12 @@ namespace NotKilledByGoogle.Bot
             {
                 _stats.UpdatesReceived.Inc();
                 Info($"Routing incoming update, type: {e.Update.Type}...");
-                var sw = new Stopwatch();
-                sw.Start();
-                await _updateRouter.RouteAsync(e.Update);
-                Info($"Processing complete, took {sw.Elapsed.TotalSeconds:F2}s.");
-                
+                var resultContext = await _updateRouter.RouteAsync(e.Update);
+                var aggregatedTimes = resultContext.ProcessTimes.Aggregate(
+                    new StringBuilder(), 
+                    (current, next) => current.Append(current.Length == 0 ? "" : ", ").Append($"{next.SegmentName}: {next.Duration.TotalMilliseconds:F2}ms"))
+                    .ToString();
+                Info($"Processing complete, took {aggregatedTimes}.");
             }
             catch (Exception ex)
             {

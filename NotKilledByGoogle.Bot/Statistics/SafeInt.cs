@@ -4,7 +4,7 @@ namespace NotKilledByGoogle.Bot.Statistics
 {
     public class SafeInt
     {
-        public SafeInt() {}
+        public SafeInt() : this(0) {}
         public SafeInt(int init) => _i = init;
         
         public int I => _i;
@@ -41,7 +41,7 @@ namespace NotKilledByGoogle.Bot.Statistics
         }
 
         // ReSharper disable once NonReadonlyMemberInGetHashCode
-        public override int GetHashCode() => _i;
+        public override int GetHashCode() => _i; // those with same values are literally the same
         public override string ToString() => _i.ToString();
     }
 }

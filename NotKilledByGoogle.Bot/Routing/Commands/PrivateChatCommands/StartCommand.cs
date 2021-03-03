@@ -25,10 +25,11 @@ namespace NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands
                 sb.Append($"Bot *version* is `{Program.Version} ({Program.InternalVersion})`\n");
                 sb.Append($"*Uptime*: `{DateTime.UtcNow:hh:mm}, up {Program.AppStopwatch.Elapsed:d' day(s) 'hh':'mm}`\n\n");
                 sb.Append("*Stats*:\n");
-                foreach (var (name, val) in context.Stats.RegisteredSafeInts)
+                foreach (var tag in context.Stats.RegisteredSafeInts)
                 {
-                    sb.Append($"- `{name}`: {val}\n");
+                    sb.Append($"- *{tag.DisplayName}* (`{tag.Id}`): {tag.SafeInt}\n");
                 }
+                context.RecordGenerationSegmentTime();
                 await context.ReplyTextMessageAsync(sb.ToString(), ParseMode.Markdown);
             }
             else
