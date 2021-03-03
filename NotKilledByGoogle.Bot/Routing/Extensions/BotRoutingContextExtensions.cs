@@ -61,7 +61,7 @@ namespace NotKilledByGoogle.Bot.Routing.Extensions
             if (context.ProcessTimes.Count == 0)
                 context.RecordGenerationSegmentTime();
         }
-        public static void RecordGenerationSegmentTime(this BotRoutingContext context) => context.RecordSegmentTime("g");
-        public static void RecordSendingSegmentTime(this BotRoutingContext context) => context.RecordSegmentTime("s");
+        public static void RecordGenerationSegmentTime(this BotRoutingContext context) => context.RecordSegmentTime("gen");
+        public static void RecordSendingSegmentTime(this BotRoutingContext context) => context.RecordSegmentTime("net");
     }
 }
