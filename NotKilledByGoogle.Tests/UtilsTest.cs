@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,18 @@ namespace NotKilledByGoogle.Tests
 {
     public class UtilsTest
     {
+        private static IEnumerable<object[]> AgeSamples()
+        {
+            yield return new object[] { TimeSpan.FromDays(1), "1 day" };
+            yield return new object[] { TimeSpan.FromDays(10), "10 days" };
+            yield return new object[] { TimeSpan.FromDays(365), "1 year" };
+            yield return new object[] { TimeSpan.FromDays(366), "1 year and 1 day" };
+            yield return new object[] { TimeSpan.FromDays(375), "1 year and 10 days" };
+            yield return new object[] { TimeSpan.FromDays(730), "2 years" };
+            yield return new object[] { TimeSpan.FromDays(731), "2 years and 1 day" };
+            yield return new object[] { TimeSpan.FromDays(740), "2 years and 10 days" };
+        }
+
         [Fact]
         public void TestNull()
             => Assert.Throws<ArgumentNullException>(() =>
@@ -71,5 +84,24 @@ namespace NotKilledByGoogle.Tests
         [InlineData("Keep an eye on me: I'm going to do some scheming\\. Here I g\\-\\[BZZZ\\!\\]")]
         public void TestAlreadyEscaped(string escaped)
             => Assert.Equal(escaped, Utils.Escape(escaped));
+
+        [Theory]
+        [MemberData(nameof(AgeSamples))]
+        public void TestAgeCalculation(TimeSpan timeSpan, string expected)
+            => Assert.Equal(expected, Utils.Age(timeSpan));
+
+        [Theory]
+        [InlineData("space", "Space")]
+        [InlineData("foo bar", "Foo bar")]
+        public void TestCapitalization(string original, string capitalized)
+            => Assert.Equal(capitalized, original.CapitalizeFirst());
+
+        [Fact]
+        public void TestEmptyCapitalization()
+            => Assert.Throws<ArgumentException>(() => "".CapitalizeFirst());
+
+        [Fact]
+        public void TestNullCapitalization()
+            => Assert.Throws<ArgumentException>(() => Utils.CapitalizeFirst(null!));
     }
 }

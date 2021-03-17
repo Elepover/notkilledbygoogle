@@ -110,9 +110,9 @@ namespace NotKilledByGoogle.Bot
         {
             string S(int num)
                 => num == 1 ? "" : "s";
-            if (duration.TotalDays < 365)
-                return $"{Math.Truncate(duration.TotalDays)} days";
             var days = Convert.ToInt32(duration.TotalDays);
+            if (days < 365)
+                return $"{days} day{S(days)}";
             var years = days / 365;
             var remainder = days % 365;
             return $"{years} year{S(years)}{(remainder == 0 ? "" : $" and {remainder} day{S(remainder)}")}";
