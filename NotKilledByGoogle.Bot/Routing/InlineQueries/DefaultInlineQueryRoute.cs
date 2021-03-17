@@ -13,14 +13,11 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
         public async Task ProcessAsync(BotRoutingContext context)
         {
             var results = context.GraveKeeper.Gravestones
-                .Select(InlineQueryResponseComposer.GetArticleResult)
+                .Select(x => InlineQueryResponseComposer.GetArticleResult(x))
+                .AddDefaultTips()
                 .Take(50);
             context.RecordGenerationSegmentTime();
-            await context.BotClient.AnswerInlineQueryAsync(
-                inlineQueryId: context.Update.InlineQuery.Id,
-                results: results,
-                isPersonal: false);
-            context.RecordSendingSegmentTime();
+            await context.AnswerInlineQueryAsync(results);
         }
     }
 }

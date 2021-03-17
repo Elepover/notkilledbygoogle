@@ -28,13 +28,14 @@ namespace NotKilledByGoogle.Tests
         }
 
         [Theory]
-        [InlineData(1000, 50)]
+        [InlineData(1000, 100)]
         public async Task TestDelay(int time, int tolerance)
         {
             var sw = new Stopwatch();
             sw.Start();
             await Utils.Delay(TimeSpan.FromMilliseconds(time));
-            Assert.InRange(sw.Elapsed.TotalMilliseconds, Convert.ToDouble(time), Convert.ToDouble(time + tolerance));
+            var elapsedMilliseconds = sw.Elapsed.TotalMilliseconds; 
+            Assert.InRange(elapsedMilliseconds, Convert.ToDouble(time), Convert.ToDouble(time + tolerance));
         }
         
         [Fact]

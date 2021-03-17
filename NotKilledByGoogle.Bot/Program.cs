@@ -23,7 +23,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        public const string Version = "0.2.42a";
+        public const string Version = "0.2.47a";
         public const int InternalVersion = 84;
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
@@ -368,8 +368,9 @@ namespace NotKilledByGoogle.Bot
                 {
                     new InlineQueryRouter()
                     {
-                        new DefaultInlineQueryRoute(),
-                        new SearchInlineQueryRoute()
+                        new SearchShortInlineQueryRoute(),
+                        new SearchInlineQueryRoute(),
+                        new DefaultInlineQueryRoute()
                     },
                     new MessageRouter()
                     {
