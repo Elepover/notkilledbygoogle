@@ -38,7 +38,7 @@ namespace NotKilledByGoogle.Tests
                     var gravestone = new Gravestone() {DateClose = DateTimeOffset.Now.AddMilliseconds(100)};
                     await scheduler.ScheduleAsync(gravestone, AnnouncementOptions.Default);
                     // counter the overheads of scheduling
-                    await Task.Delay(250);
+                    await Task.Delay(100);
                 });
             var receivedEventAsync = await receivedEventTask;
             Assert.NotNull(receivedEventAsync);
@@ -59,10 +59,10 @@ namespace NotKilledByGoogle.Tests
             
             for (int expected = expectedAnnouncements; expected >= 1; expected--)
             {
-                await scheduler.ScheduleAsync(gravestone, TimeSpan.FromMilliseconds(expected * 50));   
+                await scheduler.ScheduleAsync(gravestone, TimeSpan.FromMilliseconds(expected * 25));   
             }
             
-            await Task.Delay(TimeSpan.FromMilliseconds(expectedAnnouncements * 50));
+            await Task.Delay(TimeSpan.FromMilliseconds(expectedAnnouncements * 25));
             
             Assert.Equal(expectedAnnouncements, count);
         }

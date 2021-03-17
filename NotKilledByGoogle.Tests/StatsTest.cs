@@ -56,6 +56,7 @@ namespace NotKilledByGoogle.Tests
         public void AttributeDiscovery()
         {
             foreach (var expectedTag in SampleStats.ExpectedTaggedTags)
+                // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
                 Assert.Contains(new SampleStats().RegisteredSafeInts, x => x.DisplayName == expectedTag);
         }
 
