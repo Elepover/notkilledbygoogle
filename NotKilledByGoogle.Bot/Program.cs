@@ -12,6 +12,7 @@ using NotKilledByGoogle.Bot.Grave.Helpers;
 using NotKilledByGoogle.Bot.Routing;
 using NotKilledByGoogle.Bot.Routing.Commands.PrivateChatCommands;
 using NotKilledByGoogle.Bot.Routing.InlineQueries;
+using NotKilledByGoogle.Bot.Routing.InlineQueries.Commands;
 using NotKilledByGoogle.Bot.Statistics;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -23,7 +24,7 @@ namespace NotKilledByGoogle.Bot
     internal static class Program
     {
         #region Compile-time configurations
-        public const string Version = "0.2.47a";
+        public const string Version = "0.2.50a";
         public const int InternalVersion = 84;
         private const int DeathAnnouncerInterval = 900000; // 15 minutes
         private static readonly string ConfigPath =
@@ -368,7 +369,15 @@ namespace NotKilledByGoogle.Bot
                 {
                     new InlineQueryRouter()
                     {
-                        new SearchShortInlineQueryRoute(),
+                        new InlineQueryCommandRouter()
+                        {
+                            new SearchShortInlineQueryRoute(),
+                            new SearchAscendInlineQueryRoute(),
+                            new SearchDescendInlineQueryRoute(),
+                            new SearchOldestInlineQueryRoute(),
+                            new SearchYoungestInlineQueryRoute(),
+                            new InvalidCommandInlineQueryRoute()
+                        },
                         new SearchInlineQueryRoute(),
                         new DefaultInlineQueryRoute()
                     },

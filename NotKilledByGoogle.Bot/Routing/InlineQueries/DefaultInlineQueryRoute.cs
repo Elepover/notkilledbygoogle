@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NotKilledByGoogle.Bot.Routing.Extensions;
+using NotKilledByGoogle.Bot.Routing.InlineQueries.Commands;
 using SimpleRouting.Routing;
 
 namespace NotKilledByGoogle.Bot.Routing.InlineQueries
@@ -14,7 +15,7 @@ namespace NotKilledByGoogle.Bot.Routing.InlineQueries
         {
             var results = context.GraveKeeper.Gravestones
                 .Select(x => InlineQueryResponseComposer.GetArticleResult(x))
-                .AddDefaultTips()
+                .AddSearchTips(ResultType.Default)
                 .Take(50);
             context.RecordGenerationSegmentTime();
             await context.AnswerInlineQueryAsync(results);

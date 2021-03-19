@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NotKilledByGoogle.Bot.Grave;
 using NotKilledByGoogle.Bot.Routing.Commands;
+using NotKilledByGoogle.Bot.Routing.InlineQueries;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 
@@ -53,6 +56,43 @@ namespace NotKilledByGoogle.Bot.Routing.Extensions
         public static long GetSenderId(this BotRoutingContext context)
             => context.Update.Message.From.Id;
 
+        /// <summary>
+        /// Get inline query content.
+        /// </summary>
+        public static string GetInlineQuery(this BotRoutingContext context)
+            => context.Update.InlineQuery.Query;
+
+        /// <summary>
+        /// Search (non-case-sensitive) for gravestones.
+        /// </summary>
+        public static IEnumerable<Gravestone> Search(this BotRoutingContext context, string content)
+            => context.GraveKeeper.Gravestones
+                .Where(x =>
+                    x.Name
+                        .ToLowerInvariant()
+                        .Contains(content.ToLowerInvariant()));
+
+        /// <summary>
+        /// Search (non-case-sensitive) for gravestones per commanded inline query request.
+        /// </summary>
+        public static IEnumerable<Gravestone> SearchByCommand(this BotRoutingContext context)
+        {
+            try
+            {
+                return context.Search(new CommandInlineQuery(context.GetInlineQuery()).Query);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return context.GraveKeeper.Gravestones;
+            }
+        }
+
+        /// <summary>
+        /// Search (non-case-sensitive) for gravestones per inline query request.
+        /// </summary>
+        public static IEnumerable<Gravestone> SearchByFullQuery(this BotRoutingContext context)
+            => context.Search(context.GetInlineQuery());
+        
         /// <summary>
         /// Checks if the sender is an administrator.
         /// </summary>

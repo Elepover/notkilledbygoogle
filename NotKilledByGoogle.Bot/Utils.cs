@@ -118,6 +118,15 @@ namespace NotKilledByGoogle.Bot
             return $"{years} year{S(years)}{(remainder == 0 ? "" : $" and {remainder} day{S(remainder)}")}";
         }
 
+        public static string SimpleAge(TimeSpan duration)
+        {
+            var years = duration.TotalDays / 365;
+            var sb = new StringBuilder();
+            sb.Append($"{years:F2}");
+            sb.Append(Convert.ToInt32(years) == 1 ? " year" : " years");
+            return sb.ToString();
+        }
+
         public static string CapitalizeFirst(this string str)
         {
             if (string.IsNullOrEmpty(str))
